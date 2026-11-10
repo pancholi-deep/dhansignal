@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     kite_api_secret: str = ""
     kite_access_token: str = ""
     tapetide_token: str = ""
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-2.5-flash"
     paper_starting_cash: float = 100000.0
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore", case_sensitive=False)
