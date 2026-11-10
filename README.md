@@ -1,12 +1,12 @@
 # DhanSignal v0.1 — Phase 1
 
-An Indian-equity market intelligence and paper-trading platform. Phase 1 provides a React + TypeScript dashboard, FastAPI backend, PostgreSQL persistence, a clearly labelled synthetic demo market-data provider, an optional Zerodha Kite Connect adapter, and a deterministic technical-signal engine.
+An Indian-equity market intelligence and paper-trading platform. Phase 1 provides a React + TypeScript dashboard, FastAPI backend, PostgreSQL persistence, a clearly labelled synthetic demo market-data provider, an optional Zerodha Kite Connect adapter, and an experimental technical-signal engine.
 
 > **Disclaimer:** DhanSignal is development software, not investment advice. Signals are experimental rules, not validated profitable strategies. Demo prices are synthetic and are never live market quotes. No broker order-placement endpoint is implemented in this phase.
 
 ## Stack
 
-- Frontend: React, TypeScript, Vite
+- Frontend: React, TypeScript, Vite, TradingView Lightweight Charts
 - Backend: Python 3.12+, FastAPI, SQLAlchemy 2, Pydantic
 - Database: PostgreSQL 16
 - Market data: deterministic demo provider by default; optional Zerodha Kite Connect adapter
@@ -61,9 +61,21 @@ docker compose down -v
 - `GET /api/v1/signals?symbols=RELIANCE,HDFCBANK,INFY`
 - `GET /api/v1/paper/account`
 
-## Initial signal logic
+## Experimental technical signal engine
 
-A long setup is considered only when the latest close is above EMA 50 and EMA 200, EMA 50 is above EMA 200, RSI(14) is between 50 and 70, and volume exceeds its 20-session average. ATR(14) is used for illustrative volatility-based stop and target levels. This is a starting hypothesis only; it needs walk-forward backtesting, realistic transaction costs, slippage and out-of-sample validation before any real-money use.
+Strategy version `technical-0.2` evaluates five explainable checks:
+
+| Check | Weight | Rule |
+|---|---:|---|
+| Trend | 3 | Close > EMA 50 > EMA 200 |
+| Momentum | 2 | RSI(14) between 50 and 70 |
+| Volume | 2 | Volume above its 20-session average |
+| MACD | 2 | MACD above its signal line |
+| Volatility | 1 | ATR(14) no more than 5% of price |
+
+The score is the sum of passed check weights, from 0 to 10. A BUY candidate requires trend, momentum, volume and MACD confirmation, with a score of at least 8. AVOID is used when price is below both EMA 50 and EMA 200; other cases are WAIT. ATR(14) provides illustrative stop and target levels at 1.5x and 3x ATR respectively.
+
+The API includes a `checks` breakdown and human-readable rationale. This scoring is a screening heuristic, not a probability or expected return. It has not been validated through backtesting. It needs walk-forward and out-of-sample testing with realistic transaction costs and slippage before it can inform real-money decisions.
 
 ## Project layout
 
