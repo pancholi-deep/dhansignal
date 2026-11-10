@@ -14,15 +14,24 @@ class ZerodhaMarketDataProvider(MarketDataProvider):
         self.client = KiteConnect(api_key=api_key)
         self.client.set_access_token(access_token)
         self._instrument_tokens: dict[str, int] = {}
+        self._instrument_master_loaded = False
+
+    def _load_instrument_master(self):
+        if self._instrument_master_loaded:
+            return
+        instruments = self.client.instruments("NSE")
+        self._instrument_tokens = {
+            row["tradingsymbol"]: int(row["instrument_token"])
+            for row in instruments if row.get("segment") == "NSE"
+        }
+        self._instrument_master_loaded = True
 
     def _token(self, symbol: str) -> int:
-        if symbol not in self._instrument_tokens:
-            instruments = self.client.instruments("NSE")
-            match = next((row for row in instruments if row["tradingsymbol"] == symbol), None)
-            if not match:
-                raise ValueError(f"NSE instrument not found: {symbol}")
-            self._instrument_tokens[symbol] = int(match["instrument_token"])
-        return self._instrument_tokens[symbol]
+        self._load_instrument_master()
+        token = self._instrument_tokens.get(symbol)
+        if token is None:
+            raise ValueError(f"NSE instrument not found: {symbol}")
+        return token
 
     def get_quotes(self, symbols: list[str]) -> list[dict]:
         from datetime import datetime, timezone
