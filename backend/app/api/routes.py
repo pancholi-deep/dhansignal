@@ -438,7 +438,7 @@ async def market_stream_socket(websocket: WebSocket):
     try:
         await websocket.send_json({
             "type": "status", "provider": "ZERODHA KITE CONNECT",
-            "is_live": True, "data": market_stream.snapshot(),
+            "is_live": market_stream.connected, "data": market_stream.snapshot(),
         })
         while True:
             message = await queue.get()
