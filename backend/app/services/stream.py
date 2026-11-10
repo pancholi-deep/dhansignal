@@ -16,6 +16,7 @@ class MarketStream:
     def __init__(self):
         self.loop = None
         self.ticker = None
+        self.connected = False
         self.clients: set[asyncio.Queue] = set()
         self.latest: dict[str, dict] = {}
         self.lock = threading.Lock()
@@ -45,11 +46,14 @@ class MarketStream:
             return
 
         def on_connect(ws, response):
+            self.connected = True
             token_ids = list(self.tokens)
             if token_ids:
                 ws.subscribe(token_ids)
                 ws.set_mode(ws.MODE_FULL, token_ids)
             logger.info("Kite stream connected; subscribed to %s instruments", len(token_ids))
+            if self.loop and not self.loop.is_closed():
+                asyncio.run_coroutine_threadsafe(self.publish({"type": "status", "provider": "ZERODHA KITE CONNECT", "is_live": True, "data": self.snapshot()}), self.loop)
 
         def on_ticks(ws, ticks):
             updates = []
@@ -81,7 +85,15 @@ class MarketStream:
 
         self.ticker.on_connect = on_connect
         self.ticker.on_ticks = on_ticks
-        self.ticker.on_error = lambda ws, code, reason: logger.error("Kite stream error %s: %s", code, reason)
+        def on_close(ws, code, reason):
+            self.connected = False
+            logger.warning("Kite stream closed: %s %s", code, reason)
+            if self.loop and not self.loop.is_closed():
+                asyncio.run_coroutine_threadsafe(self.publish({"type": "status", "provider": "ZERODHA KITE CONNECT", "is_live": False, "data": []}), self.loop)
+
+        def on_error(ws, code, reason):
+            self.connected = False
+            logger.error("Kite stream error %s: %s", code, reason)
         try:
             self.ticker.connect(threaded=True)
         except Exception:
