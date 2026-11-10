@@ -64,7 +64,7 @@ export default function PaperTrading({ symbols, liveQuotes }: { symbols: string[
         </tbody></table></div></div>
       </div>
     </div>
-    <div className="panel paper-table-panel paper-trades"><div className="paper-table-title">Trade journal</div><div className="table-wrap"><table><thead><tr><th>Time</th><th>Symbol</th><th>Side</th><th>Qty</th><th>Fill price</th><th>Fees</th><th>Realized P&amp;L</th></tr></thead><tbody>
+    <div className="panel paper-table-panel paper-trades" id="journal"><div className="paper-table-title">Trade journal</div><div className="table-wrap"><table><thead><tr><th>Time</th><th>Symbol</th><th>Side</th><th>Qty</th><th>Fill price</th><th>Fees</th><th>Realized P&amp;L</th></tr></thead><tbody>
       {trades.length ? trades.map(t => <tr key={t.id}><td>{stamp(t.created_at)}</td><td className="symbol">{t.symbol}</td><td><span className={`pill ${t.side === 'BUY' ? 'buy' : 'avoid'}`}>{t.side}</span></td><td>{t.quantity}</td><td>{inr(t.price)}</td><td>{inr(t.fees)}</td><td className={t.realized_pnl >= 0 ? 'pnl-positive' : 'pnl-negative'}>{inr(t.realized_pnl)}</td></tr>) : <tr><td colSpan={7} className="paper-empty">Your simulated fills will appear here.</td></tr>}
     </tbody></table></div></div>
   </section>
