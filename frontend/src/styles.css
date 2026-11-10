@@ -14,3 +14,23 @@
 .chart-subtitle{color:#9ca3af;font-size:11px;font-weight:600;letter-spacing:.08em;padding:15px 8px 5px;border-top:1px solid #263449;margin-top:8px}
 .chart-message,.chart-error{padding:15px;color:#9ca3af}.chart-error{color:#f87171}.chart-demo-notice{margin-bottom:12px}
 @media(max-width:640px){.chart-toolbar{align-items:stretch}.chart-periods{justify-content:space-between}.chart-periods button{flex:1;padding:7px 8px}.chart-panel{padding:5px}}
+
+/* Paper trading simulator */
+.paper-layout{display:grid;grid-template-columns:minmax(240px,.75fr) minmax(0,1.6fr);gap:13px}
+.paper-order-form{padding:17px;display:flex;flex-direction:column;gap:13px}
+.paper-form-title,.paper-table-title{font:700 12px Manrope,sans-serif;padding-bottom:11px;color:#e3ebf8}
+.paper-order-form label{display:flex;flex-direction:column;gap:7px;font-size:10px;color:#91a0b8}
+.paper-order-form select,.paper-order-form input{width:100%;background:#0c1421;border:1px solid #2a3b53;color:#e8edf7;border-radius:6px;padding:10px;font:inherit}
+.paper-side-toggle{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.paper-side-toggle button{padding:9px;border:1px solid #2b3a50;background:#111d2d;color:#9aa9bf;border-radius:6px;font-weight:700;cursor:pointer}
+.paper-side-toggle button.buy-selected{background:#12382f;color:#48d5a2;border-color:#28785f}
+.paper-side-toggle button.sell-selected{background:#3c2029;color:#ff8993;border-color:#85434e}
+.paper-estimate{display:flex;justify-content:space-between;font-size:10px;color:#8290a6}.paper-estimate strong{color:#e3ebf8}
+.paper-submit{border:0;border-radius:6px;padding:11px;background:#2869d7;color:white;font-weight:700;cursor:pointer}.paper-submit:disabled{opacity:.5;cursor:not-allowed}
+.paper-disclaimer{font-size:9px;line-height:1.5;color:#71819a}
+.paper-success,.paper-error{font-size:10px;padding:9px;border-radius:6px;line-height:1.5}
+.paper-success{background:#12382f;color:#68ddb2}.paper-error{background:#3c2029;color:#ff9ca5}
+.paper-right{display:flex;flex-direction:column;gap:13px;min-width:0}.paper-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+.paper-table-panel{padding-top:14px}.paper-table-title{padding-left:15px}.paper-empty{text-align:center;color:#71819a;padding:22px}
+.pnl-positive{color:#39cf9b!important}.pnl-negative{color:#ff7d87!important}.paper-trades{margin-top:13px}
+@media(max-width:900px){.paper-layout{grid-template-columns:1fr}.paper-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
