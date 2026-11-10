@@ -77,6 +77,16 @@ The score is the sum of passed check weights, from 0 to 10. A BUY candidate requ
 
 The API includes a `checks` breakdown and human-readable rationale. This scoring is a screening heuristic, not a probability or expected return. It has not been validated through backtesting. It needs walk-forward and out-of-sample testing with realistic transaction costs and slippage before it can inform real-money decisions.
 
+## Paper trading simulator
+
+The paper simulator supports immediate simulated BUY and SELL fills at the configured provider's latest quote. It tracks cash, weighted-average position cost, open positions, realized and unrealized P&L, and a persistent trade journal. A simplified 0.10% fee is applied on each side; this is not a full brokerage, STT, exchange, GST or stamp-duty model. SELL orders cannot exceed the current position, and BUY orders cannot exceed available cash. The simulator never sends orders to a broker. The paper ledger is stored in PostgreSQL and is not reset when containers restart.
+
+API endpoints:
+
+- `GET /api/v1/paper/account`
+- `POST /api/v1/paper/orders` with `{ "symbol": "RELIANCE", "side": "BUY", "quantity": 1 }`
+- `GET /api/v1/paper/trades?limit=50`
+
 ## Project layout
 
 ```text
