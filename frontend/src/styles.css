@@ -91,3 +91,14 @@ html { scroll-behavior: smooth; scroll-padding-top: 18px; }
 @media(max-width:600px){.watch-head,.watch-row{grid-template-columns:1.2fr 1fr .8fr 25px}.watchlist-manager input{width:115px}}
 
 .brand-mark{overflow:hidden;padding:0;background:transparent}.brand-mark img{display:block;width:100%;height:100%;object-fit:cover}
+
+.watchlist-autocomplete{position:relative}
+.watchlist-suggestions{position:absolute;z-index:20;top:calc(100% + 6px);left:0;width:min(320px,75vw);max-height:280px;overflow-y:auto;background:#111d2d;border:1px solid #344967;border-radius:8px;box-shadow:0 14px 35px rgba(0,0,0,.4)}
+.watchlist-suggestion{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;background:transparent;border:0;border-bottom:1px solid #24344a;color:#dce6f5;text-align:left;cursor:pointer}
+.watchlist-suggestion:hover{background:#1b2d47}
+.watchlist-suggestion strong,.watchlist-suggestion small{display:block}
+.watchlist-suggestion strong{font-size:10px}
+.watchlist-suggestion small{font-size:9px;color:#8294ad;margin-top:3px;max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.watchlist-suggestion em{font-size:8px;color:#8db7ff;font-style:normal}
+.watchlist-no-suggestions{padding:12px;color:#8294ad;font-size:9px}
+@media(max-width:600px){.watchlist-suggestions{width:min(280px,78vw)}}
