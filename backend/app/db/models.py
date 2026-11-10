@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import DateTime, Float, Integer, String, UniqueConstraint, func
+from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column
 from app.db.session import Base
 
@@ -77,3 +77,14 @@ class ResearchDocument(Base):
     extracted_text: Mapped[str] = mapped_column(String, default="")
     status: Mapped[str] = mapped_column(String(24), default="processed")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)
+
+
+class ResearchChunk(Base):
+    __tablename__ = "research_chunks"
+    __table_args__ = (UniqueConstraint("document_id", "chunk_index", name="uq_research_chunk_document_index"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    document_id: Mapped[int] = mapped_column(ForeignKey("research_documents.id", ondelete="CASCADE"), index=True)
+    page_number: Mapped[int] = mapped_column(Integer, index=True)
+    chunk_index: Mapped[int] = mapped_column(Integer)
+    content: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
