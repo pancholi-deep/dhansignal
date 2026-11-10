@@ -14,9 +14,10 @@ def get_watchlist():
 def get_signals(symbols: list[str]):
     market = provider()
     signals = []
+    quotes = {item.get("symbol"): item for item in market.get_quotes(symbols)}
     for symbol in symbols:
         history = market.get_history(symbol, interval="day", days=240)
-        quote = next((item for item in market.get_quotes([symbol]) if item.get("symbol") == symbol), None)
+        quote = quotes.get(symbol)
         if quote and not history.empty:
             index = history.index[-1]
             history.loc[index, "close"] = float(quote.get("last_price") or history.loc[index, "close"])
