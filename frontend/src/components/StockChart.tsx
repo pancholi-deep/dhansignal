@@ -6,7 +6,7 @@ import {
   LineStyle,
 } from 'lightweight-charts'
 import type { UTCTimestamp } from 'lightweight-charts'
-import type { Candle } from '../types'
+import type { Candle, Quote } from '../types'
 import { api } from '../services/api'
 
 const SYMBOLS = ['RELIANCE', 'HDFCBANK', 'INFY', 'ICICIBANK', 'TCS', 'LT']
@@ -36,11 +36,13 @@ const chartOptions = {
   timeScale: { borderColor: '#374151', timeVisible: false, rightOffset: 5 },
 }
 
-export default function StockChart() {
+export default function StockChart({ quotes }: { quotes: Quote[] }) {
   const priceRef = useRef<HTMLDivElement>(null)
   const volumeRef = useRef<HTMLDivElement>(null)
   const rsiRef = useRef<HTMLDivElement>(null)
   const macdRef = useRef<HTMLDivElement>(null)
+  const candleSeriesRef = useRef<any>(null)
+  const volumeSeriesRef = useRef<any>(null)
   const [symbol, setSymbol] = useState('RELIANCE')
   const [days, setDays] = useState(180)
   const [candles, setCandles] = useState<Candle[]>([])
@@ -48,6 +50,7 @@ export default function StockChart() {
   const [isLive, setIsLive] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const liveQuote = quotes.find(item => item.symbol === symbol)
 
   useEffect(() => {
     let cancelled = false
@@ -90,6 +93,7 @@ export default function StockChart() {
     const ema50 = priceChart.addLineSeries({ color: '#38bdf8', lineWidth: 2, title: 'EMA 50', lastValueVisible: false })
     const ema200 = priceChart.addLineSeries({ color: '#c084fc', lineWidth: 2, title: 'EMA 200', lastValueVisible: false })
 
+    candleSeriesRef.current = candleSeries
     candleSeries.setData(candles.map(c => ({
       time: chartTime(c.date), open: c.open, high: c.high, low: c.low, close: c.close,
     })))
@@ -100,6 +104,7 @@ export default function StockChart() {
 
     const volumeChart = createChart(volumeRef.current, { ...chartOptions, height: 125, autoSize: true })
     const volumeSeries = volumeChart.addHistogramSeries({ priceFormat: { type: 'volume' }, priceScaleId: '', lastValueVisible: false })
+    volumeSeriesRef.current = volumeSeries
     volumeChart.priceScale('').applyOptions({ scaleMargins: { top: 0.1, bottom: 0 } })
     volumeSeries.setData(candles.map(c => ({
       time: chartTime(c.date), value: c.volume,
@@ -127,12 +132,26 @@ export default function StockChart() {
     macdChart.timeScale().fitContent()
 
     return () => {
+      candleSeriesRef.current = null
+      volumeSeriesRef.current = null
       priceChart.remove()
       volumeChart.remove()
       rsiChart.remove()
       macdChart.remove()
     }
   }, [candles])
+
+  useEffect(() => {
+    if (!liveQuote || !candles.length || !candleSeriesRef.current || !volumeSeriesRef.current) return
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date())
+    const previous = candles[candles.length - 1]
+    const time = chartTime(today)
+    const open = liveQuote.open && liveQuote.open > 0 ? liveQuote.open : (previous.date === today ? previous.open : previous.close)
+    const high = Math.max(liveQuote.last_price, liveQuote.high || open, previous.date === today ? previous.high : open)
+    const low = Math.min(liveQuote.last_price, liveQuote.low || open, previous.date === today ? previous.low : open)
+    candleSeriesRef.current.update({ time, open, high, low, close: liveQuote.last_price })
+    volumeSeriesRef.current.update({ time, value: liveQuote.volume, color: liveQuote.last_price >= open ? 'rgba(34,197,94,0.55)' : 'rgba(239,68,68,0.55)' })
+  }, [liveQuote, candles])
 
   return (
     <section className="section stock-chart-section">
