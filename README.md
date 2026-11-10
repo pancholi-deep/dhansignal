@@ -125,5 +125,5 @@ DhanSignal/
 - Kite login callback/token generation and WebSocket streaming are not implemented yet; the current adapter uses the configured access token for its supported REST endpoints.
 - Market-data access and entitlements depend on the broker account, current plan and applicable terms.
 - Demo mode is synthetic, is not connected to NSE/BSE, and must not be interpreted as a live quote.
-- Portfolio import, PDF research, realistic paper-order execution, transaction charges and the mobile app are subsequent milestones.
+- Semantic/vector retrieval, OCR for scanned PDFs, AI-generated source-grounded research reports, portfolio import, realistic paper-order execution, complete transaction charges and the mobile app are subsequent milestones.
 - Before broker order execution, review current SEBI, exchange and broker requirements; add explicit approval, risk limits, audit logs and kill switches.
