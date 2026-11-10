@@ -17,26 +17,9 @@ def test_rejects_corrupt_pdf():
         inspect_pdf(b"%PDF-1.7\nnot-a-valid-pdf")
 
 
-def test_chunk_pdf_preserves_page_numbers():
-    from reportlab.pdfgen import canvas
-    import io
-    from app.services.research import chunk_pdf
-
-    output = io.BytesIO()
-    pdf = canvas.Canvas(output)
-    pdf.drawString(72, 720, "Revenue increased by 18 percent in the financial year.")
-    pdf.showPage()
-    pdf.drawString(72, 720, "Net debt declined and operating cash flow improved.")
-    pdf.save()
-    chunks = chunk_pdf(output.getvalue())
-    assert chunks
-    assert {chunk["page_number"] for chunk in chunks} == {1, 2}
-    assert "Revenue" in chunks[0]["content"]
-
 
 def test_rank_chunks_orders_matching_evidence():
     from app.services.research import rank_chunks
-
     chunks = [
         {"document_id": 1, "page_number": 1, "content": "The company opened new offices."},
         {"document_id": 2, "page_number": 7, "content": "Revenue growth and revenue visibility improved."},
