@@ -3,11 +3,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    app_name: str = "TradeLens API"
+    app_name: str = "DhanSignal API"
     app_env: str = "development"
     api_v1_prefix: str = "/api/v1"
     cors_origins: str = "http://localhost:5173"
-    database_url: str = "postgresql+psycopg://tradelens:tradelens_dev@localhost:5432/tradelens"
+    database_url: str = "postgresql+psycopg://dhansignal:dhansignal_dev@localhost:5432/tradelens"
     market_data_provider: str = "demo"
     kite_api_key: str = ""
     kite_api_secret: str = ""

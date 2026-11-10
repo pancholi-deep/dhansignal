@@ -1,15 +1,15 @@
-# TradeLens v0.1 — Phase 1
+# DhanSignal v0.1 — Phase 1
 
-A personal Indian-equity research and paper-trading starter platform. Phase 1 includes a React dashboard, FastAPI backend, PostgreSQL persistence, a demo market-data provider, an optional Zerodha Kite Connect adapter, and a deterministic technical-signal engine.
+An Indian-equity market intelligence and paper-trading platform. Phase 1 provides a React + TypeScript dashboard, FastAPI backend, PostgreSQL persistence, a clearly labelled synthetic demo market-data provider, an optional Zerodha Kite Connect adapter, and a deterministic technical-signal engine.
 
-> **Important:** This is development software, not investment advice. Signals are rule-based examples, not validated profitable strategies. Demo prices are synthetic. Live quotes require an appropriately licensed/authorized data source and valid Zerodha credentials. No order-placement endpoint is implemented in this phase.
+> **Disclaimer:** DhanSignal is development software, not investment advice. Signals are experimental rules, not validated profitable strategies. Demo prices are synthetic and are never live market quotes. No broker order-placement endpoint is implemented in this phase.
 
 ## Stack
 
-- Frontend: React, TypeScript, Vite, lightweight custom UI
+- Frontend: React, TypeScript, Vite
 - Backend: Python 3.12+, FastAPI, SQLAlchemy 2, Pydantic
 - Database: PostgreSQL 16
-- Market data: Demo provider by default; optional Kite Connect quote/history adapter
+- Market data: deterministic demo provider by default; optional Zerodha Kite Connect adapter
 - Indicators: pandas, NumPy
 
 ## Run locally
@@ -17,8 +17,8 @@ A personal Indian-equity research and paper-trading starter platform. Phase 1 in
 ### Prerequisites
 
 - Docker + Docker Compose
-- Node.js 20+
-- Python 3.12+ (optional if running backend through Docker)
+- Node.js 20+ (optional when using Docker)
+- Python 3.12+ (optional when using Docker)
 
 ### 1. Configure environment
 
@@ -26,9 +26,7 @@ A personal Indian-equity research and paper-trading starter platform. Phase 1 in
 cp .env.example .env
 ```
 
-Leave `MARKET_DATA_PROVIDER=demo` initially. To enable Kite market data, configure `KITE_API_KEY` and a valid `KITE_ACCESS_TOKEN` in `.env` and set `MARKET_DATA_PROVIDER=zerodha`.
-
-Kite access tokens expire and must be obtained through the supported Kite login flow. Do not commit credentials or expose them to the browser.
+Keep `MARKET_DATA_PROVIDER=demo` for local development. To enable Kite market data, configure `KITE_API_KEY` and a valid `KITE_ACCESS_TOKEN` in `.env`, then set `MARKET_DATA_PROVIDER=zerodha`. Never commit credentials or expose them to the browser.
 
 ### 2. Start services
 
@@ -37,23 +35,23 @@ docker compose up --build
 ```
 
 - Dashboard: http://localhost:5173
-- API docs: http://localhost:8000/docs
+- API documentation: http://localhost:8000/docs
 - Health: http://localhost:8000/health
 - PostgreSQL: localhost:5432
 
-### 3. Stop
+### 3. Stop services
 
 ```bash
 docker compose down
 ```
 
-To remove the local database volume too (destructive):
+To also remove the local database volume (destructive):
 
 ```bash
 docker compose down -v
 ```
 
-## Useful API endpoints
+## API endpoints
 
 - `GET /health`
 - `GET /api/v1/market/overview`
@@ -63,23 +61,14 @@ docker compose down -v
 - `GET /api/v1/signals?symbols=RELIANCE,HDFCBANK,INFY`
 - `GET /api/v1/paper/account`
 
-The current demo provider supplies deterministic synthetic candles and quotes. The Zerodha adapter expects NSE instrument symbols and a valid Kite access token; it is deliberately isolated behind `MarketDataProvider`.
+## Initial signal logic
 
-## Signal logic (initial baseline)
-
-A long setup is considered only when:
-
-1. Last close is above EMA 50 and EMA 200.
-2. EMA 50 is above EMA 200.
-3. RSI(14) is between 50 and 70.
-4. Latest volume is above the 20-session average.
-
-A `WAIT` or `EXIT` result is returned otherwise. ATR(14) is used for an illustrative volatility-based stop and target. This is a starting hypothesis only; it needs walk-forward backtesting, realistic costs, slippage and out-of-sample validation before any live use.
+A long setup is considered only when the latest close is above EMA 50 and EMA 200, EMA 50 is above EMA 200, RSI(14) is between 50 and 70, and volume exceeds its 20-session average. ATR(14) is used for illustrative volatility-based stop and target levels. This is a starting hypothesis only; it needs walk-forward backtesting, realistic transaction costs, slippage and out-of-sample validation before any real-money use.
 
 ## Project layout
 
 ```text
-TradeLens/
+DhanSignal/
 ├── backend/
 │   ├── app/
 │   │   ├── api/              # HTTP routes
@@ -95,10 +84,10 @@ TradeLens/
 └── .env.example
 ```
 
-## Current limitations / next steps
+## Current limitations and next steps
 
-- Kite login callback/token generation is not implemented; use a valid access token for local development.
-- Kite historical API access and market-data entitlements depend on the broker account and current plan.
-- Demo mode is not connected to NSE/BSE and must not be used to infer real prices.
-- Portfolio holdings import, PDF research, paper order execution, transaction charges and mobile app are subsequent milestones.
-- Before broker order execution, review current SEBI/exchange/broker requirements and add explicit approval, risk limits, audit logs and kill switches.
+- Kite login callback/token generation and WebSocket streaming are not implemented yet; the current adapter uses the configured access token for its supported REST endpoints.
+- Market-data access and entitlements depend on the broker account, current plan and applicable terms.
+- Demo mode is synthetic, is not connected to NSE/BSE, and must not be interpreted as a live quote.
+- Portfolio import, PDF research, realistic paper-order execution, transaction charges and the mobile app are subsequent milestones.
+- Before broker order execution, review current SEBI, exchange and broker requirements; add explicit approval, risk limits, audit logs and kill switches.

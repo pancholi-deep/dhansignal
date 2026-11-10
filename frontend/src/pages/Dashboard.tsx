@@ -20,14 +20,14 @@ export default function Dashboard() {
     try {
       const [o, w, s, a] = await Promise.all([api.overview(), api.watchlist(), api.signals(), api.account()])
       setOverview(o); setWatchlist(w); setSignals(s.signals); setAccount(a)
-    } catch (e) { setError(e instanceof Error ? e.message : 'Unable to connect to TradeLens API') }
+    } catch (e) { setError(e instanceof Error ? e.message : 'Unable to connect to DhanSignal API') }
     finally { setLoading(false) }
   }
   useEffect(() => { void refresh(); const id = window.setInterval(() => void refresh(), 60_000); return () => window.clearInterval(id) }, [])
 
   return <div className="app-shell">
     <aside className="sidebar">
-      <div className="brand"><div className="brand-mark"><ChartNoAxesCombined size={22}/></div><div><strong>TradeLens</strong><span>MARKET INTELLIGENCE</span></div></div>
+      <div className="brand"><div className="brand-mark"><ChartNoAxesCombined size={22}/></div><div><strong>DhanSignal</strong><span>MARKET INTELLIGENCE</span></div></div>
       <div className="nav-label">WORKSPACE</div>
       <a className="nav-item active"><Activity size={18}/> Overview</a><a className="nav-item"><ChartNoAxesCombined size={18}/> Market scanner</a><a className="nav-item"><BrainCircuit size={18}/> AI research <span className="soon">SOON</span></a><a className="nav-item"><Wallet size={18}/> Portfolio</a>
       <div className="nav-label second">PAPER TRADING</div><a className="nav-item"><CircleDollarSign size={18}/> Simulator</a><a className="nav-item"><Clock3 size={18}/> Trade journal</a>
@@ -42,7 +42,7 @@ export default function Dashboard() {
       <section className="section"><div className="section-heading"><div><h2>Paper trading account</h2><p>Virtual capital · No real orders are placed</p></div><span className="paper-tag">PAPER MODE</span></div><div className="account-grid"><MetricCard label="Starting capital" value={inr(account?.starting_cash ?? 100000)} change="Virtual allocation" positive/><MetricCard label="Available cash" value={inr(account?.cash_balance ?? 100000)} change="Ready to deploy" positive/><MetricCard label="Invested value" value={inr(account?.invested_value ?? 0)} change="No open positions"/><MetricCard label="Unrealized P&L" value={inr(account?.unrealized_pnl ?? 0)} change="After simulated fills"/></div></section>
       <section className="section"><div className="section-heading"><div><h2>AI-assisted trade signals</h2><p>Baseline technical strategy · EMA 50/200, RSI, volume and ATR</p></div><span className="muted small">Strategy v0.1</span></div><div className="panel"><SignalTable signals={signals}/><div className="panel-foot"><span>Signals are rule-based candidates, not personalized investment advice.</span><span>{signals.length} symbols scanned</span></div></div></section>
       <section className="section"><div className="section-heading"><div><h2>Watchlist</h2><p>Starter NSE universe · Expandable from the scanner</p></div><button className="text-button">Manage watchlist <span>→</span></button></div><div className="panel watch-panel"><div className="watch-head"><span>INSTRUMENT</span><span>LAST TRADED PRICE</span><span>DAY CHANGE</span><span>VOLUME</span></div>{(watchlist?.quotes || []).map(q => <div className="watch-row" key={q.symbol}><div className="watch-name"><span className="stock-icon">{q.symbol.slice(0,1)}</span><div><strong>{q.symbol}</strong><small>NSE · EQ</small></div></div><strong>{inr(q.last_price)}</strong><span className={q.change_percent >= 0 ? 'trend-up' : 'trend-down'}>{q.change_percent >= 0 ? '+' : ''}{q.change_percent.toFixed(2)}%</span><span className="muted">{q.volume.toLocaleString('en-IN')}</span></div>)}</div></section>
-      <footer><span>TradeLens v0.1.0</span><span>Market data: {overview?.provider || 'Not connected'} · For research and simulation only</span></footer>
+      <footer><span>DhanSignal v0.1.0</span><span>Market data: {overview?.provider || 'Not connected'} · For research and simulation only</span></footer>
     </main>
   </div>
 }

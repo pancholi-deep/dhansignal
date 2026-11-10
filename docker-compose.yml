@@ -1,29 +1,29 @@
 services:
   db:
     image: postgres:16-alpine
-    container_name: tradelens-db
+    container_name: dhansignal-db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: tradelens
-      POSTGRES_USER: tradelens
-      POSTGRES_PASSWORD: tradelens_dev
+      POSTGRES_DB: dhansignal
+      POSTGRES_USER: dhansignal
+      POSTGRES_PASSWORD: dhansignal_dev
     ports:
       - "5432:5432"
     volumes:
-      - tradelens_pgdata:/var/lib/postgresql/data
+      - dhansignal_pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U tradelens -d tradelens"]
+      test: ["CMD-SHELL", "pg_isready -U dhansignal -d dhansignal"]
       interval: 5s
       timeout: 5s
       retries: 10
 
   backend:
     build: ./backend
-    container_name: tradelens-api
+    container_name: dhansignal-api
     restart: unless-stopped
     env_file: .env
     environment:
-      DATABASE_URL: postgresql+psycopg://tradelens:tradelens_dev@db:5432/tradelens
+      DATABASE_URL: postgresql+psycopg://dhansignal:dhansignal_dev@db:5432/dhansignal
     ports:
       - "8000:8000"
     depends_on:
@@ -32,7 +32,7 @@ services:
 
   frontend:
     build: ./frontend
-    container_name: tradelens-web
+    container_name: dhansignal-web
     restart: unless-stopped
     environment:
       VITE_API_BASE_URL: http://localhost:8000/api/v1
@@ -42,4 +42,4 @@ services:
       - backend
 
 volumes:
-  tradelens_pgdata:
+  dhansignal_pgdata:
