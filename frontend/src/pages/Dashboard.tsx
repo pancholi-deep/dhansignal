@@ -45,8 +45,9 @@ export default function Dashboard() {
     try {
       if (action === 'add') await api.addWatchlistSymbol(symbol)
       else await api.removeWatchlistSymbol(symbol)
-      const next = await api.watchlist()
+      const [next, signalResponse] = await Promise.all([api.watchlist(), api.signals()])
       setWatchlist(next)
+      setSignals(signalResponse.signals)
       if (action === 'add') {
         setSelectedSymbol(symbol)
         setWatchlistInput('')
@@ -88,7 +89,13 @@ export default function Dashboard() {
       socket.onopen = () => setStreamStatus('Market stream connected')
       socket.onmessage = event => {
         const message = JSON.parse(event.data) as { type: string; provider?: string; is_live?: boolean; data?: WatchlistResponse['quotes'] }
-        if (message.data?.length) setWatchlist(previous => previous ? { ...previous, quotes: message.data!, provider: message.provider || previous.provider, is_live: message.is_live ?? previous.is_live } : previous)
+        if (message.data?.length) setWatchlist(previous => previous ? {
+          ...previous,
+          // Keep quotes for watchlist symbols not included in a partial stream snapshot.
+          quotes: Array.from(new Map([...previous.quotes, ...message.data!].map(quote => [quote.symbol, quote])).values()),
+          provider: message.provider || previous.provider,
+          is_live: message.is_live ?? previous.is_live,
+        } : previous)
         if (message.provider) setStreamStatus(message.provider === 'ZERODHA KITE CONNECT' ? message.provider + (message.is_live ? ' · STREAM LIVE' : ' · STREAM DISCONNECTED') : message.provider === 'DEMO DATA' ? message.provider + ' · SYNTHETIC PRICES' : message.provider + ' · REST / DELAYED SNAPSHOTS')
       }
       socket.onerror = () => setStreamStatus('Market stream reconnecting…')
@@ -129,7 +136,10 @@ export default function Dashboard() {
           </div>}
         </div>
         <button type="submit" disabled={watchlistBusy || !watchlistInput.trim()}>+ Add</button>
-      </form></div><div className="panel watch-panel">{watchlistMessage && <div className="watchlist-feedback" role="status">{watchlistMessage}</div>}<div className="watch-head"><span>INSTRUMENT</span><span>LAST TRADED PRICE</span><span>DAY CHANGE</span><span>VOLUME</span></div>{(watchlist?.quotes || []).map(q => <div className="watch-row" key={q.symbol}><button type="button" className="watch-name watch-select" onClick={() => { setSelectedSymbol(q.symbol); document.getElementById("chart")?.scrollIntoView({ behavior: "smooth" }) }}><span className="stock-icon">{q.symbol.slice(0,1)}</span><span><strong>{q.symbol}</strong><small>NSE · EQ · View chart</small></span></button><strong>{inr(q.last_price)}</strong><span className={q.change_percent >= 0 ? 'trend-up' : 'trend-down'}>{q.change_percent >= 0 ? '+' : ''}{q.change_percent.toFixed(2)}%</span><span className="muted">{q.volume.toLocaleString('en-IN')}</span><button type="button" className="watch-remove" aria-label={`Remove ${q.symbol} from watchlist`} title="Remove from watchlist" disabled={watchlistBusy || (watchlist?.symbols.length || 0) <= 1} onClick={() => void manageWatchlist('remove', q.symbol)}>×</button></div>)}</div></section>
+      </form></div><div className="panel watch-panel">{watchlistMessage && <div className="watchlist-feedback" role="status">{watchlistMessage}</div>}<div className="watch-head"><span>INSTRUMENT</span><span>LAST TRADED PRICE</span><span>DAY CHANGE</span><span>VOLUME</span></div>{(watchlist?.symbols || []).map(symbol => {
+        const q = watchlist?.quotes.find(quote => quote.symbol === symbol)
+        return <div className="watch-row" key={symbol}><button type="button" className="watch-name watch-select" onClick={() => { setSelectedSymbol(symbol); document.getElementById("chart")?.scrollIntoView({ behavior: "smooth" }) }}><span className="stock-icon">{symbol.slice(0,1)}</span><span><strong>{symbol}</strong><small>NSE · EQ · View chart</small></span></button><strong>{q ? inr(q.last_price) : '—'}</strong><span className={q ? (q.change_percent >= 0 ? 'trend-up' : 'trend-down') : 'muted'}>{q ? `${q.change_percent >= 0 ? '+' : ''}${q.change_percent.toFixed(2)}%` : 'Quote unavailable'}</span><span className="muted">{q ? q.volume.toLocaleString('en-IN') : '—'}</span><button type="button" className="watch-remove" aria-label={`Remove ${symbol} from watchlist`} title="Remove from watchlist" disabled={watchlistBusy || (watchlist?.symbols.length || 0) <= 1} onClick={() => void manageWatchlist('remove', symbol)}>×</button></div>
+      })}</div></section>
       <footer><span>DhanSignal v0.1.0</span><span>Market data: {overview?.provider || 'Not connected'} · For research and simulation only</span></footer>
     </main>
   </div>
