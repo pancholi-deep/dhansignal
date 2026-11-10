@@ -7,11 +7,13 @@ from app.db.session import Base, engine, SessionLocal
 from app.db import models  # noqa: F401
 from app.db.models import PaperAccount, WatchlistItem
 from app.api.routes import router
+from app.services.stream import market_stream
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
+    market_stream.start()
     db = SessionLocal()
     try:
         if db.query(PaperAccount).count() == 0:
