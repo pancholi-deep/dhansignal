@@ -58,6 +58,7 @@ docker compose down -v
 - `GET /api/v1/auth/zerodha/callback` — Kite login callback
 - `GET /api/v1/market/overview`
 - `GET /api/v1/market/watchlist`
+- `WS /api/v1/market/stream` — live Kite ticks for the starter NSE watchlist (synthetic snapshots in demo mode)
 - `GET /api/v1/market/quotes?symbols=RELIANCE,HDFCBANK,INFY`
 - `GET /api/v1/market/history/{symbol}?interval=day&days=180`
 - `GET /api/v1/signals?symbols=RELIANCE,HDFCBANK,INFY`
