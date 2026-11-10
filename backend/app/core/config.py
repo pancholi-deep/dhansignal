@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     kite_api_key: str = ""
     kite_api_secret: str = ""
     kite_access_token: str = ""
+    tapetide_token: str = ""
     paper_starting_cash: float = 100000.0
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore", case_sensitive=False)
