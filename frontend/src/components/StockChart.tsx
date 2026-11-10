@@ -38,7 +38,7 @@ const chartOptions = {
   timeScale: { borderColor: '#374151', timeVisible: true, secondsVisible: false, rightOffset: 5 },
 }
 
-export default function StockChart({ quotes, selectedSymbol, onSymbolChange }: { quotes: Quote[]; selectedSymbol: string; onSymbolChange: (symbol: string) => void }) {
+export default function StockChart({ quotes, symbols: watchlistSymbols = [], selectedSymbol, onSymbolChange }: { quotes: Quote[]; symbols?: string[]; selectedSymbol: string; onSymbolChange: (symbol: string) => void }) {
   const priceRef = useRef<HTMLDivElement>(null)
   const volumeRef = useRef<HTMLDivElement>(null)
   const rsiRef = useRef<HTMLDivElement>(null)
@@ -52,7 +52,7 @@ export default function StockChart({ quotes, selectedSymbol, onSymbolChange }: {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const symbol = selectedSymbol
-  const symbols = Array.from(new Set([...quotes.map(item => item.symbol), selectedSymbol])).filter(Boolean)
+  const symbols = Array.from(new Set([...watchlistSymbols, ...quotes.map(item => item.symbol), selectedSymbol])).filter(Boolean)
   const isDemo = provider === 'DEMO DATA'
   const liveQuote = quotes.find(item => item.symbol === symbol)
 
