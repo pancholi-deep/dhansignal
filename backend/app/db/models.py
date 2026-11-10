@@ -21,6 +21,31 @@ class PaperAccount(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+class PaperPosition(Base):
+    __tablename__ = "paper_positions"
+    __table_args__ = (UniqueConstraint("account_id", "symbol", name="uq_paper_position_account_symbol"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    account_id: Mapped[int] = mapped_column(Integer, index=True)
+    symbol: Mapped[str] = mapped_column(String(32), index=True)
+    quantity: Mapped[int] = mapped_column(Integer, default=0)
+    average_price: Mapped[float] = mapped_column(Float, default=0.0)
+    realized_pnl: Mapped[float] = mapped_column(Float, default=0.0)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class PaperTrade(Base):
+    __tablename__ = "paper_trades"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    account_id: Mapped[int] = mapped_column(Integer, index=True)
+    symbol: Mapped[str] = mapped_column(String(32), index=True)
+    side: Mapped[str] = mapped_column(String(4))
+    quantity: Mapped[int] = mapped_column(Integer)
+    price: Mapped[float] = mapped_column(Float)
+    fees: Mapped[float] = mapped_column(Float, default=0.0)
+    realized_pnl: Mapped[float] = mapped_column(Float, default=0.0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)
+
+
 class SignalRecord(Base):
     __tablename__ = "signal_records"
     __table_args__ = (UniqueConstraint("symbol", "as_of", "strategy_version"),)
