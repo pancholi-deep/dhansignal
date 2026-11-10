@@ -21,8 +21,9 @@ def generate_stock_intelligence(symbol: str) -> dict:
         raise RuntimeError("Gemini is not configured. Add GEMINI_API_KEY to backend .env and restart the API.")
 
     now = time.monotonic()
+    cache_key = f"{settings.market_data_provider}:{settings.gemini_model}:{symbol}"
     with _CACHE_LOCK:
-        cached = _CACHE.get(symbol)
+        cached = _CACHE.get(cache_key)
         if cached and now - cached[0] < _CACHE_TTL_SECONDS:
             return {**cached[1], "cached": True}
 
@@ -62,8 +63,8 @@ def generate_stock_intelligence(symbol: str) -> dict:
     prompt = """You are DhanSignal's equity research assistant. Analyze this NSE-listed stock using ONLY the supplied market context. Do not invent company fundamentals, news, events, analyst views, or live facts. Distinguish observed data from interpretation. This is educational market analysis, not personalized financial advice. Do not promise returns or issue a guaranteed prediction.
 Return valid JSON only with this exact shape:
 {
-  "stance": "BULLISH | NEUTRAL | BEARISH",
-  "confidence": "LOW | MEDIUM | HIGH",
+  "stance": one of ["BULLISH", "NEUTRAL", "BEARISH"],
+  "confidence": one of ["LOW", "MEDIUM", "HIGH"],
   "summary": "2-3 sentence assessment",
   "trend": "brief trend assessment",
   "momentum": "brief momentum assessment",
@@ -78,7 +79,7 @@ Keep each field concise. If data is incomplete or stale, say so and lower confid
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{settings.gemini_model}:generateContent"
     response = requests.post(
         url,
-        params={"key": settings.gemini_api_key},
+        headers={"x-goog-api-key": settings.gemini_api_key},
         json={
             "contents": [{"parts": [{"text": prompt + "\n\nMARKET CONTEXT JSON:\n" + json.dumps(context, default=str)}]}],
             "generationConfig": {"temperature": 0.2, "responseMimeType": "application/json"},
@@ -108,5 +109,5 @@ Keep each field concise. If data is incomplete or stale, say so and lower confid
         "disclaimer": "AI-generated educational analysis from the supplied market snapshot. Not investment advice. Verify prices and information independently.",
     }
     with _CACHE_LOCK:
-        _CACHE[symbol] = (now, result)
+        _CACHE[cache_key] = (now, result)
     return result
