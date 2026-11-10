@@ -313,3 +313,172 @@ footer{border-color:var(--ds-border);color:#748198;padding-top:19px}
   .intelligence-panel{padding:12px}
   .chart-heading-actions{flex-wrap:wrap;justify-content:flex-end}
 }
+
+
+/* DhanSignal — quiet capital design direction
+   Restrained private-wealth palette: forest ink, warm ivory, aged brass.
+   Accent color is reserved for meaningful actions and financial states. */
+:root{
+  --ds-bg:#0b1411;
+  --ds-surface:#111d18;
+  --ds-surface-raised:#18251f;
+  --ds-border:rgba(205,213,195,.11);
+  --ds-muted:#91a096;
+  --ds-text:#eeeade;
+  --ds-gold:#c4ad83;
+  --ds-gold-soft:#a58e68;
+  --ds-teal:#69b995;
+}
+body{
+  background:
+    radial-gradient(ellipse at 82% -18%,rgba(111,137,104,.10),transparent 38%),
+    linear-gradient(180deg,#0b1411 0%,#0c1512 55%,#0a120f 100%);
+  color:#eeeade;
+}
+.sidebar{
+  background:#0e1914;
+  border-right:1px solid rgba(205,213,195,.10);
+  box-shadow:8px 0 28px rgba(0,0,0,.10);
+}
+.brand-mark{border:1px solid rgba(196,173,131,.18);box-shadow:none}
+.brand span{color:#a18f70}
+.nav-label{color:#78877c}
+.nav-item{color:#a5afa5;border-color:transparent;transition:background .16s ease,color .16s ease}
+.nav-item:hover{background:#17251e;border-color:rgba(205,213,195,.08);color:#f0eadb}
+.nav-item.active{
+  background:#1b2b22;
+  border:1px solid rgba(196,173,131,.17);
+  color:#e3d1aa;
+  box-shadow:inset 2px 0 0 #b9a178;
+}
+.nav-item.active:before{display:none}
+.secure{background:#14241c;border-color:rgba(105,185,149,.16);color:#82c5a3}
+.avatar{background:#33483a;color:#e9dfc9}
+.sidebar-toggle{background:#142019;border-color:rgba(205,213,195,.12);color:#aab4a9}
+.sidebar-toggle:hover{background:#1a2a21;color:#eeeade}
+.main-content{background:transparent}
+.topbar{border-color:rgba(205,213,195,.10)}
+.breadcrumb{color:#87958a}
+.breadcrumb strong{color:#e7e2d5}
+.global-stock-picker{
+  background:#14221a;
+  border:1px solid rgba(196,173,131,.24);
+  box-shadow:none;
+}
+.global-stock-picker>span{color:#b8a27b}
+.global-stock-picker select{color:#eee5d2}
+.refresh-button{
+  background:#1b2b22;
+  border:1px solid rgba(196,173,131,.22);
+  color:#e0cfaa;
+  box-shadow:none;
+}
+.refresh-button:hover{background:#23372b;transform:translateY(-1px)}
+.market-clock{color:#9aa69a}
+.live-dot,.provider-tag span{background:#69b995;box-shadow:0 0 0 3px rgba(105,185,149,.09)}
+.eyebrow{color:#b6a27c;letter-spacing:2.1px}
+h1{
+  background:none;
+  color:#f0ecdf;
+  -webkit-text-fill-color:initial;
+  letter-spacing:-1.1px;
+  font-weight:650;
+}
+.page-heading p,.section-heading p{color:#9aa69a}
+.section-heading h2{color:#e8e5d9}
+.index-card,.metric-card,.panel,.chart-panel{
+  background:#121e18;
+  border:1px solid rgba(205,213,195,.105);
+  border-radius:12px;
+  box-shadow:0 8px 24px rgba(0,0,0,.10);
+}
+.index-card,.metric-card{transition:border-color .18s ease,background .18s ease}
+.index-card:hover,.metric-card:hover{
+  transform:none;
+  border-color:rgba(196,173,131,.27);
+  background:#17251e;
+}
+.index-top,.metric-label{color:#a0aa9f}
+.index-value,.metric-value{color:#f0ecdf}
+.sparkline{background:#26362d}
+.sparkline span{background:#6aab89}
+.metric-change{color:#929e92}
+.metric-change.positive,.trend-up{color:#79c49e}
+.trend-down{color:#d88e89}
+.help-bubble{
+  background:transparent;
+  border-color:rgba(196,173,131,.42);
+  color:#c4ad83;
+}
+.help-bubble:hover{background:rgba(196,173,131,.10);color:#ead9b5}
+th,.watch-head{background:#17241d;color:#9da79a}
+td,.watch-row{border-color:rgba(205,213,195,.085);color:#c7cabe}
+td.symbol{color:#eeeade}
+.pill.buy{background:rgba(72,139,101,.16);color:#8bcca6}
+.pill.wait{background:rgba(174,143,85,.14);color:#d5bd8d}
+.pill.avoid{background:rgba(164,91,88,.14);color:#d99a94}
+.panel-foot{border-color:rgba(205,213,195,.09);color:#89968a}
+.text-button{color:#c4ad83}
+.stock-icon{background:#24372b;border:1px solid rgba(196,173,131,.13);color:#d0ba91}
+.watch-select:hover strong{color:#e2cda3}
+.watchlist-manager input,.chart-toolbar select,.paper-order-form select,.paper-order-form input,.research-upload input,.research-upload select,.research-search input{
+  background:#0e1914;border-color:rgba(205,213,195,.15);color:#eeeade;
+}
+.watchlist-manager button,.research-search button{
+  background:#263b2d;border:1px solid rgba(105,185,149,.22);color:#b9d9c4;
+}
+.watchlist-suggestions{background:#142019;border-color:rgba(196,173,131,.2);box-shadow:0 14px 35px rgba(0,0,0,.3)}
+.watchlist-suggestion{color:#e9e7dc;border-color:rgba(205,213,195,.08)}
+.watchlist-suggestion:hover{background:#1e3025}
+.watchlist-suggestion em{color:#c4ad83}
+.chart-panel{background:#111d18}
+.chart-toolbar select{background:#0e1914}
+.chart-periods button{
+  background:#17241d;
+  border-color:rgba(205,213,195,.12);
+  color:#a5afa3;
+}
+.chart-periods button:hover,.chart-periods button.selected{
+  background:#26372b;
+  border-color:rgba(196,173,131,.42);
+  color:#e5d4b1;
+}
+.chart-subtitle{color:#b6a27c;border-color:rgba(205,213,195,.09)}
+.chart-help{background:#18271f;border-color:rgba(196,173,131,.16)}
+.chart-help summary{color:#d5c29b}
+.chart-help p{color:#aab4a8}
+.chart-collapse-button{background:#1b2b22;border-color:rgba(196,173,131,.2);color:#d6c39d}
+.intelligence-item{background:#0e1914;border-color:rgba(205,213,195,.10)}
+.intelligence-item strong,.intelligence-lists strong,.intelligence-caveats strong{color:#c9b48a}
+.intelligence-item p,.intelligence-lists ul,.intelligence-caveats ul{color:#b2bbae}
+.intelligence-summary{color:#e1e3d8}
+.intelligence-button{
+  background:#263b2d;
+  border:1px solid rgba(105,185,149,.25);
+  color:#c7e0ce;
+  box-shadow:none;
+}
+.intelligence-button:hover{background:#304b38;filter:none;transform:none}
+.intelligence-empty{background:#142019;border-color:rgba(196,173,131,.16);color:#aab4a8}
+.paper-submit{
+  background:#314b38;
+  border:1px solid rgba(105,185,149,.28);
+  color:#e1eee3;
+  box-shadow:none;
+}
+.paper-submit:hover:not(:disabled){background:#3b5b44;filter:none}
+.paper-side-toggle button{background:#17241d;border-color:rgba(205,213,195,.13);color:#aab4a8}
+.paper-side-toggle button.buy-selected{background:#1b392b;color:#8ed0a9;border-color:#477b5b}
+.paper-side-toggle button.sell-selected{background:#392322;color:#dfa09a;border-color:#80514b}
+.demo-banner{background:#282319;border-color:rgba(196,173,131,.25);color:#d5c49f}
+.error-banner{background:#2a1b19;border-color:rgba(190,110,99,.28);color:#e0aaa1}
+.provider-tag.live{background:#172d22;border:1px solid rgba(105,185,149,.18);color:#8bc9a5}
+.provider-tag.demo{background:#292419;border:1px solid rgba(196,173,131,.18);color:#d5bd8d}
+.intelligence-stance.bullish{background:#1b392b;color:#8ed0a9}
+.intelligence-stance.bearish{background:#392322;color:#dfa09a}
+.intelligence-stance.neutral{background:#302a1d;color:#d5bd8d}
+footer{border-color:rgba(205,213,195,.09);color:#7f8d81}
+@media(max-width:900px){
+  .sidebar{background:#0e1914}
+  .sidebar-collapsed{background:#0e1914}
+}
