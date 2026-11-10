@@ -107,7 +107,7 @@ def search_market_instruments(q: str = Query(..., min_length=1, max_length=40)):
             ticker = str(item.get("symbol") or "").upper()
             exchange = str(item.get("exchange") or "").upper()
             quote_type = str(item.get("quoteType") or "").upper()
-            if not ticker.endswith((".NS", ".BO")) or quote_type not in {"EQUITY", "ETF"}:
+            if not ticker.endswith(".NS") or quote_type not in {"EQUITY", "ETF"}:
                 continue
             symbol = ticker.rsplit(".", 1)[0]
             if symbol in seen:
@@ -116,7 +116,7 @@ def search_market_instruments(q: str = Query(..., min_length=1, max_length=40)):
             results.append({
                 "symbol": symbol,
                 "name": str(item.get("shortname") or item.get("longname") or symbol),
-                "exchange": "BSE" if ticker.endswith(".BO") else "NSE",
+                "exchange": "NSE",
             })
         return {"results": results[:10]}
     except Exception:
@@ -137,9 +137,20 @@ def add_watchlist_symbol(symbol: str):
             raise HTTPException(status_code=409, detail=f"{symbol} is already in your watchlist")
         if db.query(WatchlistItem).count() >= 30:
             raise HTTPException(status_code=400, detail="Watchlist limit is 30 symbols")
-        quote = next((q for q in get_market_data_provider().get_quotes([symbol]) if q.get("symbol") == symbol), None)
-        if not quote or not quote.get("last_price"):
-            raise HTTPException(status_code=404, detail=f"No NSE quote or instrument found for {symbol}")
+        # Do not require a quote to exist at this instant: REST feeds can be
+        # temporarily unavailable or outside market hours. Validate the NSE
+        # instrument against Yahoo's symbol search instead.
+        try:
+            matches = yf.Search(symbol, max_results=20).quotes or []
+            valid_symbol = any(
+                str(item.get("symbol") or "").upper() == f"{symbol}.NS"
+                and str(item.get("quoteType") or "").upper() in {"EQUITY", "ETF"}
+                for item in matches
+            )
+        except Exception:
+            valid_symbol = False
+        if not valid_symbol:
+            raise HTTPException(status_code=404, detail=f"{symbol} was not found in the NSE instrument directory")
         db.add(WatchlistItem(symbol=symbol, exchange="NSE"))
         db.commit()
         return {"message": f"{symbol} added to watchlist", "symbol": symbol}
