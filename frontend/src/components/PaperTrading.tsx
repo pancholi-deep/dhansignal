@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../services/api'
-import type { PaperAccount, PaperTrade, Quote } from '../types'
+import type { PaperAccount, PaperTrade, Quote, PaperControl } from '../types'
 
 const inr = (value: number) => `₹${value.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
 const stamp = (value: string | null) => value ? new Date(value).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : '—'
@@ -9,6 +9,7 @@ export default function PaperTrading({ symbols, liveQuotes }: { symbols: string[
   const [account, setAccount] = useState<PaperAccount | null>(null)
   const [trades, setTrades] = useState<PaperTrade[]>([])
   const [quotes, setQuotes] = useState<Quote[]>([])
+  const [control, setControl] = useState<PaperControl | null>(null)
   const [symbol, setSymbol] = useState(symbols[0] || 'RELIANCE')
   const [side, setSide] = useState<'BUY' | 'SELL'>('BUY')
   const [quantity, setQuantity] = useState(1)
@@ -17,8 +18,8 @@ export default function PaperTrading({ symbols, liveQuotes }: { symbols: string[
   const [error, setError] = useState('')
 
   async function refresh() {
-    const [a, t] = await Promise.all([api.account(), api.trades()])
-    setAccount(a); setTrades(t.trades)
+    const [a, t, c] = await Promise.all([api.account(), api.trades(), api.paperControl()])
+    setAccount(a); setTrades(t.trades); setControl(c)
   }
   useEffect(() => { void refresh().catch(e => setError(e.message)) }, [])
   useEffect(() => { setQuotes(liveQuotes) }, [liveQuotes])
@@ -38,7 +39,7 @@ export default function PaperTrading({ symbols, liveQuotes }: { symbols: string[
 
   const quote = quotes.find(q => q.symbol === symbol)
   return <section className="section">
-    <div className="section-heading"><div><h2>Paper trading simulator</h2><p>Simulated market orders · 0.10% fee per side · No broker orders</p></div><span className="paper-tag">VIRTUAL ₹1 LAKH</span></div>
+    <div className="section-heading"><div><h2>Paper trading simulator</h2><p>Live quote-based simulated fills · 0.10% fee per side · No broker orders</p><p className="muted small">Per-order limit: {inr(control?.max_order_value ?? 25000)}</p></div><div className="paper-control-actions"><span className="paper-tag">{control?.enabled ? "SIMULATOR ENABLED" : "SIMULATOR PAUSED"}</span><button type="button" className="text-button" onClick={async () => { try { const next = await api.updatePaperControl(!(control?.enabled ?? true)); setControl(next); setMessage(next.enabled ? "Paper trading enabled" : "Paper trading paused") } catch (e) { setError(e instanceof Error ? e.message : "Could not update trading control") } }}>{control?.enabled ? "Pause trading" : "Resume trading"}</button></div></div>
     <div className="paper-layout">
       <form className="panel paper-order-form" onSubmit={submitOrder}>
         <div className="paper-form-title">Place simulated order</div>
@@ -47,9 +48,9 @@ export default function PaperTrading({ symbols, liveQuotes }: { symbols: string[
         <label>Quantity<input type="number" min="1" max="10000" step="1" value={quantity} onChange={e => setQuantity(Math.max(1, Math.min(10000, Number(e.target.value) || 1)))}/></label>
         <div className="paper-estimate"><span>Indicative price</span><strong>{quote ? inr(quote.last_price) : 'Loading…'}</strong></div>
         <div className="paper-estimate"><span>Estimated order value</span><strong>{quote ? inr(quote.last_price * quantity) : '—'}</strong></div>
-        <button className="paper-submit" type="submit" disabled={busy || !quote}>{busy ? 'Processing…' : `Place paper ${side} order`}</button>
+        <button className="paper-submit" type="submit" disabled={busy || !quote || !control?.enabled || quote.last_price * quantity > (control?.max_order_value ?? 25000)}>{busy ? 'Processing…' : `Place paper ${side} order`}</button>
         {message && <div className="paper-success">{message}</div>}{error && <div className="paper-error">{error}</div>}
-        <p className="paper-disclaimer">Orders fill immediately at the provider's latest quote. Demo mode uses synthetic prices. Fees are a simplified simulation, not actual brokerage or statutory charges.</p>
+        <p className="paper-disclaimer">Orders fill immediately at the latest available provider quote, subject to the simulator kill switch and ₹25,000 per-order limit. Demo mode uses synthetic prices. Fees are a simplified simulation, not actual brokerage or statutory charges.</p>
       </form>
       <div className="paper-right">
         <div className="account-grid paper-metrics">
