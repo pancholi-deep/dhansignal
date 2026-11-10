@@ -81,6 +81,11 @@ export default function Dashboard() {
     }
   }
 
+  useEffect(() => {
+    setIntelligence(null)
+    setIntelligenceError('')
+  }, [selectedSymbol])
+
   async function refresh() {
     setLoading(true); setError('')
     try {
