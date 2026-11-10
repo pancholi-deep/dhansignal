@@ -81,10 +81,65 @@ def watchlist():
     market = get_market_data_provider()
     db: Session = SessionLocal()
     try:
-        symbols = [row.symbol for row in db.query(WatchlistItem).order_by(WatchlistItem.id).all()] or DEFAULT_SYMBOLS
+        rows = db.query(WatchlistItem).order_by(WatchlistItem.id).all()
+        if not rows:
+            db.add_all([WatchlistItem(symbol=s, exchange="NSE") for s in DEFAULT_SYMBOLS])
+            db.commit()
+            rows = db.query(WatchlistItem).order_by(WatchlistItem.id).all()
+        symbols = [row.symbol for row in rows]
     finally:
         db.close()
     return {"symbols": symbols, "quotes": market.get_quotes(symbols), "provider": market.name, "is_live": market.is_live}
+
+
+@router.post("/market/watchlist/{symbol}")
+def add_watchlist_symbol(symbol: str):
+    symbol = symbol.strip().upper()
+    if not re.fullmatch(r"[A-Z0-9&_-]{1,32}", symbol):
+        raise HTTPException(status_code=400, detail="Enter a valid NSE trading symbol")
+    db: Session = SessionLocal()
+    try:
+        if not db.query(WatchlistItem).count():
+            db.add_all([WatchlistItem(symbol=s, exchange="NSE") for s in DEFAULT_SYMBOLS])
+            db.flush()
+        if db.query(WatchlistItem).filter_by(symbol=symbol).first():
+            raise HTTPException(status_code=409, detail=f"{symbol} is already in your watchlist")
+        if db.query(WatchlistItem).count() >= 30:
+            raise HTTPException(status_code=400, detail="Watchlist limit is 30 symbols")
+        quote = next((q for q in get_market_data_provider().get_quotes([symbol]) if q.get("symbol") == symbol), None)
+        if not quote or not quote.get("last_price"):
+            raise HTTPException(status_code=404, detail=f"No NSE quote or instrument found for {symbol}")
+        db.add(WatchlistItem(symbol=symbol, exchange="NSE"))
+        db.commit()
+        return {"message": f"{symbol} added to watchlist", "symbol": symbol}
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()
+
+
+@router.delete("/market/watchlist/{symbol}")
+def remove_watchlist_symbol(symbol: str):
+    symbol = symbol.strip().upper()
+    db: Session = SessionLocal()
+    try:
+        if not db.query(WatchlistItem).count():
+            db.add_all([WatchlistItem(symbol=s, exchange="NSE") for s in DEFAULT_SYMBOLS])
+            db.flush()
+        item = db.query(WatchlistItem).filter_by(symbol=symbol).first()
+        if not item:
+            raise HTTPException(status_code=404, detail=f"{symbol} is not in your watchlist")
+        if db.query(WatchlistItem).count() <= 1:
+            raise HTTPException(status_code=400, detail="Keep at least one symbol in your watchlist")
+        db.delete(item)
+        db.commit()
+        return {"message": f"{symbol} removed from watchlist", "symbol": symbol}
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()
 
 
 @router.get("/market/quotes")
