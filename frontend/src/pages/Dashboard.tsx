@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Activity, ArrowDownRight, ArrowUpRight, ChartNoAxesCombined, CircleDollarSign, RefreshCw, ShieldCheck } from 'lucide-react'
+import { Activity, ArrowDownRight, ArrowUpRight, Bell, ChartNoAxesCombined, CircleDollarSign, RefreshCw, Search, ShieldCheck } from 'lucide-react'
 import { api } from '../services/api'
 import type { Overview, Signal, WatchlistResponse, KiteAuthStatus } from '../types'
 import { MetricCard } from '../components/MetricCard'
