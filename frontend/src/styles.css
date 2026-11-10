@@ -34,3 +34,24 @@
 .paper-table-panel{padding-top:14px}.paper-table-title{padding-left:15px}.paper-empty{text-align:center;color:#71819a;padding:22px}
 .pnl-positive{color:#39cf9b!important}.pnl-negative{color:#ff7d87!important}.paper-trades{margin-top:13px}
 @media(max-width:900px){.paper-layout{grid-template-columns:1fr}.paper-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Company research library */
+.research-layout{display:grid;grid-template-columns:minmax(260px,.8fr) minmax(0,1.5fr);gap:13px}
+.research-upload{padding:17px;display:flex;flex-direction:column;gap:12px}
+.research-upload label{display:flex;flex-direction:column;gap:7px;font-size:10px;color:#91a0b8}
+.research-upload input,.research-upload select,.research-search input{width:100%;min-width:0;background:#0c1421;border:1px solid #2a3b53;color:#e8edf7;border-radius:6px;padding:10px;font:inherit}
+.research-upload input[type=file]{font-size:9px}
+.research-two-col{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.research-library{min-width:0;padding-top:14px}
+.research-library-head{display:flex;align-items:flex-start;justify-content:space-between;padding:0 15px 12px}
+.research-search{display:flex;gap:7px;padding:0 14px 12px}
+.research-search button{background:#263f64;color:#cfe0ff;border:1px solid #365985;border-radius:6px;padding:0 14px;font-size:10px;cursor:pointer}
+.research-search button:disabled{opacity:.5;cursor:not-allowed}
+.research-doc-list{max-height:560px;overflow:auto}
+.research-doc{padding:13px 15px;border-top:1px solid #202b3d}
+.research-doc-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.research-doc-top strong{font-size:11px;color:#e3ebf8}
+.research-doc-type{font-size:8px;color:#9db8e2;background:#1b2d47;border-radius:4px;padding:4px 6px;white-space:nowrap}
+.research-doc-meta{font-size:9px;color:#78879d;margin-top:6px}
+.research-snippet{font-size:10px;line-height:1.6;color:#aab8cb;margin-top:8px}
+@media(max-width:900px){.research-layout{grid-template-columns:1fr}}
