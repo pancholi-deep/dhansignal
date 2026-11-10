@@ -50,8 +50,8 @@ export default function ResearchWorkspace() {
     finally { setBusy(false) }
   }
 
-  async function search(event?: React.FormEvent) {
-    event?.preventDefault(); setError('')
+  async function search() {
+    setError('')
     if (query.trim().length < 2) return
     try { const response = await api.searchResearch(query.trim(), symbol || undefined); setResults(response.results) }
     catch (e) { setError(e instanceof Error ? e.message : 'Search failed') }
