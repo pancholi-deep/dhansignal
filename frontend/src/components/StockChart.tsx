@@ -38,7 +38,7 @@ const chartOptions = {
   timeScale: { borderColor: '#374151', timeVisible: true, secondsVisible: false, rightOffset: 5 },
 }
 
-export default function StockChart({ quotes, symbols: watchlistSymbols = [], selectedSymbol, onSymbolChange }: { quotes: Quote[]; symbols?: string[]; selectedSymbol: string; onSymbolChange: (symbol: string) => void }) {
+export default function StockChart({ quotes, selectedSymbol }: { quotes: Quote[]; selectedSymbol: string }) {
   const priceRef = useRef<HTMLDivElement>(null)
   const volumeRef = useRef<HTMLDivElement>(null)
   const rsiRef = useRef<HTMLDivElement>(null)
@@ -53,7 +53,6 @@ export default function StockChart({ quotes, symbols: watchlistSymbols = [], sel
   const [chartExpanded, setChartExpanded] = useState(true)
   const [error, setError] = useState('')
   const symbol = selectedSymbol
-  const symbols = Array.from(new Set([...watchlistSymbols, ...quotes.map(item => item.symbol), selectedSymbol])).filter(Boolean)
   const isDemo = provider === 'DEMO DATA'
   const liveQuote = quotes.find(item => item.symbol === symbol)
 
@@ -168,9 +167,6 @@ export default function StockChart({ quotes, symbols: watchlistSymbols = [], sel
       </div>
       {chartExpanded && <>
       <div className="chart-toolbar">
-        <select value={symbol} onChange={e => onSymbolChange(e.target.value)} aria-label="Select stock">
-          {symbols.map(item => <option key={item} value={item}>{item}</option>)}
-        </select>
         <div className="chart-periods">
           {WINDOWS.map(option => (
             <button key={option.label} className={window.label === option.label ? 'selected' : ''} onClick={() => setWindow(option)}>
