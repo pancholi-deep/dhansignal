@@ -1,4 +1,4 @@
-import type { Overview, Signal, WatchlistResponse, Candle, PaperAccount, PaperTrade, PaperOrderResult } from '../types'
+import type { Overview, Signal, WatchlistResponse, Candle, PaperAccount, PaperTrade, PaperOrderResult, ResearchDocument } from '../types'
 
 const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1'
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -17,6 +17,15 @@ export const api = {
   trades: () => request<{ trades: PaperTrade[] }>('/paper/trades'),
   placePaperOrder: (payload: { symbol: string; side: 'BUY' | 'SELL'; quantity: number }) =>
     request<PaperOrderResult>('/paper/orders', { method: 'POST', body: JSON.stringify(payload) }),
+  researchDocuments: () => request<{ documents: ResearchDocument[]; count: number }>('/research/documents'),
+  searchResearch: (q: string, symbol?: string) => request<{ results: ResearchDocument[]; count: number }>(
+    `/research/search?q=${encodeURIComponent(q)}${symbol ? `&symbol=${encodeURIComponent(symbol)}` : ''}`
+  ),
+  uploadResearch: async (form: FormData) => {
+    const response = await fetch(`${API}/research/documents`, { method: 'POST', body: form })
+    if (!response.ok) { const body = await response.json().catch(() => null); throw new Error(body?.detail || `Upload failed (${response.status})`) }
+    return response.json() as Promise<ResearchDocument>
+  },
   history: (symbol: string, days = 365) =>
     request<{ symbol: string; provider: string; is_live: boolean; candles: Candle[] }>(
       `/market/history/${encodeURIComponent(symbol)}?interval=day&days=${days}`
