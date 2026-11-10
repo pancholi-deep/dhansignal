@@ -5,7 +5,7 @@ import type { PaperAccount, PaperTrade, Quote } from '../types'
 const inr = (value: number) => `₹${value.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
 const stamp = (value: string | null) => value ? new Date(value).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : '—'
 
-export default function PaperTrading({ symbols }: { symbols: string[] }) {
+export default function PaperTrading({ symbols, liveQuotes }: { symbols: string[]; liveQuotes: Quote[] }) {
   const [account, setAccount] = useState<PaperAccount | null>(null)
   const [trades, setTrades] = useState<PaperTrade[]>([])
   const [quotes, setQuotes] = useState<Quote[]>([])
@@ -17,11 +17,13 @@ export default function PaperTrading({ symbols }: { symbols: string[] }) {
   const [error, setError] = useState('')
 
   async function refresh() {
-    const [a, t, q] = await Promise.all([api.account(), api.trades(), api.watchlist()])
-    setAccount(a); setTrades(t.trades); setQuotes(q.quotes)
+    const [a, t] = await Promise.all([api.account(), api.trades()])
+    setAccount(a); setTrades(t.trades)
   }
   useEffect(() => { void refresh().catch(e => setError(e.message)) }, [])
+  useEffect(() => { setQuotes(liveQuotes) }, [liveQuotes])
   useEffect(() => { if (symbols.length && !symbols.includes(symbol)) setSymbol(symbols[0]) }, [symbols.join(',')])
+  useEffect(() => { const id = window.setInterval(() => { void refresh().catch(e => setError(e.message)) }, 5000); return () => window.clearInterval(id) }, [])
 
   async function submitOrder(event: React.FormEvent) {
     event.preventDefault(); setBusy(true); setError(''); setMessage('')
