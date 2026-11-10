@@ -28,13 +28,15 @@ class ZerodhaMarketDataProvider(MarketDataProvider):
         keys = [f"NSE:{symbol}" for symbol in symbols]
         raw = self.client.quote(keys)
         result = []
+        from app.services.stream import market_stream
+        cached = {item['symbol']: item for item in market_stream.snapshot(symbols)}
         for key, quote in raw.items():
             symbol = key.split(":", 1)[1]
             ohlc = quote.get("ohlc", {})
             last = float(quote.get("last_price", 0))
             close = float(ohlc.get("close", last))
             change = last - close
-            result.append({
+            result.append(cached.get(symbol) or {
                 "symbol": symbol, "exchange": "NSE", "last_price": last,
                 "change": change, "change_percent": (change / close * 100) if close else 0,
                 "volume": int(quote.get("volume", 0)),
