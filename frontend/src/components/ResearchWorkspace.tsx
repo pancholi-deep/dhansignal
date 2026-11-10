@@ -65,7 +65,7 @@ export default function ResearchWorkspace() {
 
   const shown = results ?? documents
   return <section className="section research-section">
-    <div className="section-heading"><div><h2>Company research library</h2><p>Upload sources and retrieve evidence with PDF page references</p></div><span className="paper-tag">PHASE 2 · INGESTION</span></div>
+    <div className="section-heading"><div><h2>Company research library</h2><p>Upload sources and retrieve evidence with PDF page references</p></div><span className="paper-tag">PHASE 2 · EVIDENCE</span></div>
     <div className="research-layout">
       <form className="panel research-upload" onSubmit={upload}>
         <div className="paper-form-title">Add research document</div>
