@@ -512,7 +512,7 @@ async def zerodha_callback(request_token: str, status: str = "success"):
 @router.get("/auth/zerodha/status")
 def zerodha_auth_status():
     return {
-        "configured": bool(settings.kite_api_key and settings.kite_api_secret),
+        "configured": bool(settings.market_data_provider.lower() == "zerodha" and settings.kite_api_key and settings.kite_api_secret),
         "authenticated": bool(settings.kite_access_token),
         "provider": settings.market_data_provider,
         "stream_connected": market_stream.connected,
