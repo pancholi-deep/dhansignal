@@ -26,7 +26,7 @@ An Indian-equity market intelligence and paper-trading platform. Phase 1 provide
 cp .env.example .env
 ```
 
-Keep `MARKET_DATA_PROVIDER=demo` for UI development; those prices are synthetic. For authorized live NSE market data, set `MARKET_DATA_PROVIDER=zerodha`, `KITE_API_KEY`, and a valid daily `KITE_ACCESS_TOKEN` in `.env`. Kite Connect's paid Connect plan is required for WebSocket live data and historical candles (currently ₹500/month per API key); the free Personal tier does not include market data. Never commit credentials or expose them to the browser. The access token expires daily and must be refreshed through the Kite login flow.
+Keep `MARKET_DATA_PROVIDER=demo` for UI development; those prices are synthetic. For authorized live NSE market data, set `MARKET_DATA_PROVIDER=zerodha`, `KITE_API_KEY`, and a valid daily `KITE_ACCESS_TOKEN` in `.env`. Kite Connect's paid Connect plan is required for WebSocket live data and historical candles (currently ₹500/month per API key); the free Personal tier does not include market data. Never commit credentials or expose them to the browser. The access token expires daily and must be refreshed through the Kite login flow. Set the Kite app's redirect URL to `http://localhost:8000/api/v1/auth/zerodha/callback`; after restarting the backend, use **Connect Zerodha** in the dashboard. The generated access token is held in backend memory and is not written to source control or persisted across backend restarts.
 
 ### 2. Start services
 
@@ -54,6 +54,8 @@ docker compose down -v
 ## API endpoints
 
 - `GET /health`
+- `GET /api/v1/auth/zerodha/status` and `GET /api/v1/auth/zerodha/login` — broker connection status and login redirect
+- `GET /api/v1/auth/zerodha/callback` — Kite login callback
 - `GET /api/v1/market/overview`
 - `GET /api/v1/market/watchlist`
 - `GET /api/v1/market/quotes?symbols=RELIANCE,HDFCBANK,INFY`
@@ -61,7 +63,6 @@ docker compose down -v
 - `GET /api/v1/signals?symbols=RELIANCE,HDFCBANK,INFY`
 - `GET /api/v1/paper/account`
 - `GET /api/v1/paper/control` and `PUT /api/v1/paper/control` — persistent simulator pause/resume switch
-- `WS /api/v1/market/stream` — live Kite ticks for the starter NSE watchlist (demo snapshots when using the demo provider)
 
 ## Experimental technical signal engine
 
