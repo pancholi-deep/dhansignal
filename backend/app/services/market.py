@@ -4,6 +4,8 @@ from app.strategies.technical import generate_signal
 from datetime import datetime
 from zoneinfo import ZoneInfo
 import pandas as pd
+import time
+from threading import Lock
 
 
 def provider():
@@ -14,12 +16,29 @@ def get_watchlist():
     return DEFAULT_SYMBOLS
 
 
+_HISTORY_CACHE: dict[str, tuple[float, pd.DataFrame]] = {}
+_HISTORY_CACHE_LOCK = Lock()
+HISTORY_CACHE_SECONDS = 300
+
+
+def cached_daily_history(market, symbol: str) -> pd.DataFrame:
+    now = time.monotonic()
+    with _HISTORY_CACHE_LOCK:
+        cached = _HISTORY_CACHE.get(symbol)
+        if cached and now - cached[0] < HISTORY_CACHE_SECONDS:
+            return cached[1].copy()
+    frame = market.get_history(symbol, interval="day", days=240)
+    with _HISTORY_CACHE_LOCK:
+        _HISTORY_CACHE[symbol] = (now, frame.copy())
+    return frame
+
+
 def get_signals(symbols: list[str]):
     market = provider()
     signals = []
     quotes = {item.get("symbol"): item for item in market.get_quotes(symbols)}
     for symbol in symbols:
-        history = market.get_history(symbol, interval="day", days=240)
+        history = cached_daily_history(market, symbol)
         quote = quotes.get(symbol)
         if quote and not history.empty:
             today = datetime.now(ZoneInfo("Asia/Kolkata")).date()
