@@ -17,7 +17,7 @@ class YahooFinanceProvider(MarketDataProvider):
     def get_history(self, symbol: str, interval: str = "day", days: int = 180) -> pd.DataFrame:
         intervals = {"day": "1d", "minute": "1m", "5minute": "5m", "15minute": "15m", "60minute": "60m", "hour": "60m"}
         yf_interval = intervals.get(interval, interval)
-        period = f"{max(1, min(days, 3650))}d" if yf_interval == "1d" else "60d"
+        period = f"{max(1, min(days, 3650))}d" if yf_interval == "1d" else ("7d" if yf_interval == "1m" else "60d")
         frame = yf.Ticker(self._ticker(symbol)).history(period=period, interval=yf_interval, auto_adjust=False, actions=False)
         if frame is None or frame.empty:
             return pd.DataFrame(columns=["date", "open", "high", "low", "close", "volume"])
