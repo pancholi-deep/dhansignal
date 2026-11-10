@@ -39,20 +39,20 @@ const chartOptions = {
   timeScale: { borderColor: '#374151', timeVisible: true, secondsVisible: false, rightOffset: 5 },
 }
 
-export default function StockChart({ quotes }: { quotes: Quote[] }) {
+export default function StockChart({ quotes, selectedSymbol, onSymbolChange }: { quotes: Quote[]; selectedSymbol: string; onSymbolChange: (symbol: string) => void }) {
   const priceRef = useRef<HTMLDivElement>(null)
   const volumeRef = useRef<HTMLDivElement>(null)
   const rsiRef = useRef<HTMLDivElement>(null)
   const macdRef = useRef<HTMLDivElement>(null)
   const candleSeriesRef = useRef<any>(null)
   const volumeSeriesRef = useRef<any>(null)
-  const [symbol, setSymbol] = useState('RELIANCE')
   const [window, setWindow] = useState(WINDOWS[3])
   const [candles, setCandles] = useState<Candle[]>([])
   const [provider, setProvider] = useState('')
   const [isLive, setIsLive] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const symbol = selectedSymbol
   const liveQuote = quotes.find(item => item.symbol === symbol)
 
   useEffect(() => {
@@ -159,13 +159,13 @@ export default function StockChart({ quotes }: { quotes: Quote[] }) {
   }, [liveQuote, candles, window])
 
   return (
-    <section className="section stock-chart-section">
+    <section className="section stock-chart-section" id="chart">
       <div className="section-heading">
-        <div><h2>Technical analysis</h2><p>Price action, trend and momentum indicators</p></div>
+        <div><h2>Technical analysis</h2><p>{symbol} · {window.interval === "day" ? "Daily candles" : window.interval === "5minute" ? "5-minute candles · 1 session" : "15-minute candles · 5 sessions"}</p></div>
         <span className={`provider-tag ${isLive ? 'live' : 'demo'}`}><span />{provider || 'LOADING'}</span>
       </div>
       <div className="chart-toolbar">
-        <select value={symbol} onChange={e => setSymbol(e.target.value)} aria-label="Select stock">
+        <select value={symbol} onChange={e => onSymbolChange(e.target.value)} aria-label="Select stock">
           {SYMBOLS.map(item => <option key={item} value={item}>{item}</option>)}
         </select>
         <div className="chart-periods">
@@ -182,7 +182,7 @@ export default function StockChart({ quotes }: { quotes: Quote[] }) {
       {!loading && !error && candles.length === 0 && <p className="chart-message">No historical candles available.</p>}
       {candles.length > 0 && (
         <div className="chart-panel">
-          <div className="chart-legend"><span className="legend-ema20">EMA 20</span><span className="legend-ema50">EMA 50</span><span className="legend-ema200">EMA 200</span></div>
+          <details className="chart-indicators"><summary>Indicators shown · EMA 20 / 50 / 200, Volume, RSI 14, MACD</summary><div className="chart-legend"><span className="legend-ema20">EMA 20</span><span className="legend-ema50">EMA 50</span><span className="legend-ema200">EMA 200</span></div></details>
           <div ref={priceRef} className="chart-canvas" />
           <div className="chart-subtitle">VOLUME</div>
           <div ref={volumeRef} className="chart-canvas" />
