@@ -63,3 +63,16 @@
 .paper-control-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 
 .signal-rationale { margin: 8px 0; padding-left: 20px; color: var(--text-secondary, #aab5c5); font-size: 12px; line-height: 1.7; }
+
+/* Navigation and chart usability refinements */
+html { scroll-behavior: smooth; scroll-padding-top: 18px; }
+.nav-item { cursor: pointer; }
+.nav-item:hover { background: #142238; color: #d7e5fb; }
+.watch-select { border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer; font: inherit; padding: 0; }
+.watch-select:hover strong { color: #8db7ff; }
+.watch-select small { display: block; }
+.chart-indicators { border-bottom: 1px solid #263449; padding: 2px 8px 9px; }
+.chart-indicators summary { color: #aab8cb; cursor: pointer; font-size: 11px; }
+.chart-indicators .chart-legend { padding: 10px 0 2px; }
+.chart-periods button { min-width: 42px; }
+@media(max-width:900px){ .nav-item { font-size: 0 !important; } }
