@@ -25,24 +25,42 @@ class ZerodhaMarketDataProvider(MarketDataProvider):
         return self._instrument_tokens[symbol]
 
     def get_quotes(self, symbols: list[str]) -> list[dict]:
-        keys = [f"NSE:{symbol}" for symbol in symbols]
-        raw = self.client.quote(keys)
-        result = []
+        from datetime import datetime, timezone
         from app.services.stream import market_stream
-        cached = {item['symbol']: item for item in market_stream.snapshot(symbols)}
-        for key, quote in raw.items():
-            symbol = key.split(":", 1)[1]
+
+        cached = {item["symbol"]: item for item in market_stream.snapshot(symbols)}
+        fresh = {}
+        for symbol, item in cached.items():
+            try:
+                age = (datetime.now(timezone.utc) - datetime.fromisoformat(item["timestamp"])).total_seconds()
+                if age <= 30:
+                    fresh[symbol] = item
+            except (KeyError, TypeError, ValueError):
+                continue
+
+        missing = [symbol for symbol in symbols if symbol not in fresh]
+        raw = self.client.quote([f"NSE:{symbol}" for symbol in missing]) if missing else {}
+        result = []
+        for symbol in symbols:
+            if symbol in fresh:
+                result.append(fresh[symbol])
+                continue
+            quote = raw.get(f"NSE:{symbol}")
+            if not quote:
+                continue
             ohlc = quote.get("ohlc", {})
             last = float(quote.get("last_price", 0))
             close = float(ohlc.get("close", last))
             change = last - close
-            result.append(cached.get(symbol) or {
+            timestamp = quote.get("timestamp")
+            result.append({
                 "symbol": symbol, "exchange": "NSE", "last_price": last,
                 "change": change, "change_percent": (change / close * 100) if close else 0,
                 "volume": int(quote.get("volume", 0)),
-                "timestamp": quote.get("timestamp").isoformat() if quote.get("timestamp") else None,
+                "timestamp": timestamp.isoformat() if timestamp else None,
                 "open": float(ohlc.get("open", 0)), "high": float(ohlc.get("high", 0)),
                 "low": float(ohlc.get("low", 0)), "close": close,
+                "source": "zerodha_quote_snapshot",
             })
         return result
 
