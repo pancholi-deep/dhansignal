@@ -38,3 +38,5 @@ export type MarketStreamMessage = { type: 'ticks' | 'snapshot' | 'status'; provi
 export type PaperControl = { enabled: boolean; max_order_value: number }
 
 export type KiteAuthStatus = { configured: boolean; authenticated: boolean; provider: string; stream_connected: boolean }
+
+export type InstrumentSuggestion = { symbol: string; name: string; exchange: 'NSE' | 'BSE' }
