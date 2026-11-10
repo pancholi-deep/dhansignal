@@ -89,3 +89,5 @@ html { scroll-behavior: smooth; scroll-padding-top: 18px; }
 .watchlist-feedback{padding:8px 14px;color:#9fc3ff;font-size:10px;border-bottom:1px solid #202b3d}
 .watch-head,.watch-row{grid-template-columns:1.4fr 1fr .8fr .8fr 25px}
 @media(max-width:600px){.watch-head,.watch-row{grid-template-columns:1.2fr 1fr .8fr 25px}.watchlist-manager input{width:115px}}
+
+.brand-mark{overflow:hidden;padding:0;background:transparent}.brand-mark img{display:block;width:100%;height:100%;object-fit:cover}
