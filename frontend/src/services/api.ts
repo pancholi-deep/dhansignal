@@ -31,8 +31,8 @@ export const api = {
     if (!response.ok) { const body = await response.json().catch(() => null); throw new Error(body?.detail || `Upload failed (${response.status})`) }
     return response.json() as Promise<ResearchDocument>
   },
-  history: (symbol: string, days = 365) =>
+  history: (symbol: string, days = 365, interval: string = 'day') =>
     request<{ symbol: string; provider: string; is_live: boolean; candles: Candle[] }>(
-      `/market/history/${encodeURIComponent(symbol)}?interval=day&days=${days}`
+      `/market/history/${encodeURIComponent(symbol)}?interval=${encodeURIComponent(interval)}&days=${days}`
     ),
 }
