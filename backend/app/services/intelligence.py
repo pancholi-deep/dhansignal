@@ -80,7 +80,9 @@ RISK FACTORS — What are the 3 things that could destroy this thesis? Sector ri
 
 FINAL VERDICT — Buy, Hold, or Avoid. Conviction score out of 10. Price at which this becomes interesting if not now. One line that summarizes this stock. Do not give me a balanced, diplomatic answer. I want the truth — even if it is uncomfortable.
 
-Use only evidence in the supplied context and documents. Never fabricate financial metrics, historical averages, peer multiples, management statements, pledge data, or shareholding changes. For each dimension, distinguish verified facts from interpretation. If a required document or metric is absent, explicitly say "Data unavailable" and explain how that limits the conclusion. Do not infer that promoter pledge or stake reduction exists without shareholding evidence. A price level must be derived from supplied market data; if it cannot be justified, return null. This is educational research, not personalized financial advice.
+Research the company on the public web before forming your assessment. The company is the NSE-listed issuer identified by the supplied symbol; resolve its full legal/company name first and verify the exchange/ticker to avoid analysing the wrong entity. Search for and review the latest available annual report and financial statements, investor presentations, Management Discussion & Analysis, earnings/concall transcripts, Screener.in key ratios, peer and historical valuation data, daily technical chart/history, and latest shareholding pattern. Prefer primary sources: company investor-relations site, BSE/NSE filings and announcements, annual reports and official transcripts. Use reputable secondary sources such as Screener.in for ratios and peer comparisons. Search specifically for promoter pledge and quarter-on-quarter promoter holding changes.
+
+Use current market data and the supplied technical context for the live price and chart indicators; use web research for fundamentals and public filings. Compare like-for-like financial periods and identify each source's publication/reporting date. Never fabricate financial metrics, historical averages, peer multiples, management statements, pledge data, or shareholding changes. For each dimension, distinguish verified facts from interpretation and cite sources by title, publisher, reporting period/date, and URL. If a source cannot be found, is inaccessible, or a metric is not verifiable, explicitly say "Data unavailable" and explain how that limits the conclusion. Do not infer that promoter pledge or stake reduction exists without shareholding evidence. A price level must be derived from supplied market data and/or clearly cited historical technical levels; if it cannot be justified, return null. This is educational research, not personalized financial advice.
 
 Return valid JSON only with this exact shape:
 {
@@ -107,12 +109,13 @@ Conviction score must be an integer from 0 to 10. Do not default to HOLD merely 
         url,
         headers={"x-goog-api-key": settings.gemini_api_key},
         json={
-            "contents": [{"parts": [{"text": prompt + "\n\nMARKET CONTEXT JSON:\n" + json.dumps(context, default=str)}]}],
-            "generationConfig": {"responseMimeType": "application/json", "maxOutputTokens": 1200, "thinkingConfig": {"thinkingLevel": "LOW"}},
+            "contents": [{"parts": [{"text": prompt + "\n\nCURRENT MARKET CONTEXT JSON:\n" + json.dumps(context, default=str)}]}],
+            "tools": [{"google_search": {}}],
+            "generationConfig": {"maxOutputTokens": 3000, "thinkingConfig": {"thinkingLevel": "LOW"}},
         },
         timeout=(10, 90),
     )
-    logger.info("Gemini request for %s using %s completed with HTTP %s in %.2fs", symbol, settings.gemini_model, response.status_code, time.monotonic() - started)
+    logger.info("Grounded Gemini request for %s using %s completed with HTTP %s in %.2fs", symbol, settings.gemini_model, response.status_code, time.monotonic() - started)
     if response.status_code >= 400:
         try:
             message = response.json().get("error", {}).get("message", "Gemini API request failed")
@@ -120,8 +123,22 @@ Conviction score must be an integer from 0 to 10. Do not default to HOLD merely 
             message = "Gemini API request failed"
         raise RuntimeError(f"Gemini API error: {message}")
     try:
-        raw = response.json()["candidates"][0]["content"]["parts"][0]["text"]
+        payload = response.json()
+        candidate = payload["candidates"][0]
+        raw = "".join(part.get("text", "") for part in candidate["content"]["parts"] if "text" in part).strip()
+        if raw.startswith("```"):
+            raw = raw.split("\n", 1)[1].rsplit("```", 1)[0].strip()
         analysis = json.loads(raw)
+        grounding = candidate.get("groundingMetadata") or {}
+        sources = []
+        seen_urls = set()
+        for chunk in grounding.get("groundingChunks", []):
+            web_source = chunk.get("web") or {}
+            uri = web_source.get("uri")
+            if uri and uri not in seen_urls:
+                seen_urls.add(uri)
+                sources.append({"title": web_source.get("title") or uri, "url": uri})
+        search_queries = grounding.get("webSearchQueries") or []
     except (ValueError, KeyError, IndexError, TypeError) as exc:
         raise RuntimeError("Gemini returned an invalid analysis response") from exc
 
@@ -132,6 +149,8 @@ Conviction score must be an integer from 0 to 10. Do not default to HOLD merely 
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "model": settings.gemini_model,
         "analysis": analysis,
+        "sources": sources,
+        "search_queries": search_queries,
         "cached": False,
         "disclaimer": "AI-generated educational analysis from the supplied market snapshot. Not investment advice. Verify prices and information independently.",
     }
