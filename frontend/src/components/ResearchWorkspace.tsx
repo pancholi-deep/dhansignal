@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../services/api'
-import type { ResearchDocument } from '../types'
+import type { ResearchDocument, ResearchEvidence } from '../types'
 
 const categories = [
   ['annual_report', 'Annual report'],
@@ -22,6 +22,7 @@ export default function ResearchWorkspace() {
   const [title, setTitle] = useState('')
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<ResearchDocument[] | null>(null)
+  const [evidence, setEvidence] = useState<ResearchEvidence[] | null>(null)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
@@ -41,7 +42,7 @@ export default function ResearchWorkspace() {
     if (title) form.append('title', title)
     try {
       const doc = await api.uploadResearch(form)
-      setMessage(`Uploaded “${doc.title}” — ${doc.page_count} pages indexed for text search.`)
+      setMessage(`Uploaded “${doc.title}” — ${doc.page_count} pages split into page-cited passages.`)
       setFile(null); setTitle(''); await load()
       const input = document.getElementById('research-pdf') as HTMLInputElement | null
       if (input) input.value = ''
@@ -56,9 +57,15 @@ export default function ResearchWorkspace() {
     catch (e) { setError(e instanceof Error ? e.message : 'Search failed') }
   }
 
+  async function retrieve(event: React.FormEvent) {
+    event.preventDefault(); setError('')
+    try { const response = await api.retrieveResearch(query.trim(), symbol || undefined); setEvidence(response.results); setResults(null) }
+    catch (e) { setError(e instanceof Error ? e.message : 'Evidence retrieval failed') }
+  }
+
   const shown = results ?? documents
   return <section className="section research-section">
-    <div className="section-heading"><div><h2>Company research library</h2><p>Upload source documents and search their extracted text</p></div><span className="paper-tag">PHASE 2 · INGESTION</span></div>
+    <div className="section-heading"><div><h2>Company research library</h2><p>Upload sources and retrieve evidence with PDF page references</p></div><span className="paper-tag">PHASE 2 · INGESTION</span></div>
     <div className="research-layout">
       <form className="panel research-upload" onSubmit={upload}>
         <div className="paper-form-title">Add research document</div>
@@ -73,7 +80,8 @@ export default function ResearchWorkspace() {
       </form>
       <div className="panel research-library">
         <div className="research-library-head"><div><div className="paper-form-title">Research documents</div><div className="muted small">{documents.length} stored documents</div></div><button className="text-button" type="button" onClick={() => { setResults(null); setQuery('') }}>Show all</button></div>
-        <form className="research-search" onSubmit={search}><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search extracted text, e.g. revenue growth…"/><button type="submit" disabled={query.trim().length < 2}>Search</button></form>
+        <form className="research-search" onSubmit={retrieve}><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Find evidence, e.g. revenue growth or debt…"/><button type="submit" disabled={query.trim().length < 2}>Find evidence</button></form>
+        {evidence && <div className="research-evidence-list">{evidence.map(item => <article className="research-evidence" key={item.id}><div className="research-doc-top"><strong>{item.title}</strong><span className="research-doc-type">Page {item.page_number}</span></div><div className="research-doc-meta">{item.company_name} · {item.symbol || "No symbol"} · {item.reporting_period || "Period not set"} · relevance {item.score}</div><p>{item.content}</p></article>)}{!evidence.length && <div className="paper-empty">No matching passages found.</div>}</div>}
         <div className="research-doc-list">
           {shown.length ? shown.map(doc => <article className="research-doc" key={doc.id}><div className="research-doc-top"><strong>{doc.title}</strong><span className="research-doc-type">{labels[doc.document_type] || doc.document_type}</span></div><div className="research-doc-meta">{doc.company_name}{doc.symbol ? ` · ${doc.symbol}` : ''}{doc.reporting_period ? ` · ${doc.reporting_period}` : ''} · {doc.page_count} pages · {(doc.file_size / 1024 / 1024).toFixed(1)} MB</div>{doc.snippet && <p className="research-snippet">{doc.snippet}</p>}</article>) : <div className="paper-empty">{results ? 'No matching documents found.' : 'Your research library is empty. Upload a PDF to begin.'}</div>}
         </div>
