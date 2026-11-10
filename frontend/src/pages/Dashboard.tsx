@@ -156,6 +156,8 @@ export default function Dashboard() {
           <div className="intelligence-item"><strong>Interesting entry price</strong><p>{intelligence.analysis.final_verdict.interesting_price == null ? 'Not enough evidence to derive a level' : inr(intelligence.analysis.final_verdict.interesting_price)}</p></div>
           {intelligence.analysis.data_gaps?.length > 0 && <div className="intelligence-caveats"><strong>Data unavailable / gaps</strong><ul>{intelligence.analysis.data_gaps.map((item, i) => <li key={i}>{item}</li>)}</ul></div>}
           {intelligence.analysis.caveats?.length > 0 && <div className="intelligence-caveats"><strong>Caveats</strong><ul>{intelligence.analysis.caveats.map((item, i) => <li key={i}>{item}</li>)}</ul></div>}
+          {intelligence.sources?.length > 0 && <div className="intelligence-caveats"><strong>Web sources reviewed</strong><ul>{intelligence.sources.map(source => <li key={source.url}><a href={source.url} target="_blank" rel="noreferrer">{source.title || source.url}</a></li>)}</ul></div>}
+          {intelligence.search_queries?.length > 0 && <details className="intelligence-caveats"><summary>Search queries used</summary><ul>{intelligence.search_queries.map((query, i) => <li key={i}>{query}</li>)}</ul></details>}
           <div className="intelligence-disclaimer">{intelligence.disclaimer} Generated {new Date(intelligence.generated_at).toLocaleString('en-IN')}.</div>
         </div>}
         {!intelligence && !intelligenceError && !intelligenceLoading && <div className="intelligence-empty">Select a stock in the chart selector, then generate a Gemini-powered technical and risk assessment. Your Gemini API key stays on the backend.</div>}
