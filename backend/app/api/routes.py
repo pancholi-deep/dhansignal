@@ -5,6 +5,7 @@ from pathlib import Path
 from datetime import timezone
 from pydantic import BaseModel, Field
 from fastapi import APIRouter, HTTPException, Query, UploadFile, File, Form, WebSocket, WebSocketDisconnect
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
 from app.db.models import PaperAccount, PaperPosition, PaperTrade, PaperTradingControl, ResearchChunk, ResearchDocument, WatchlistItem
@@ -479,3 +480,40 @@ def update_paper_control(payload: PaperControlRequest):
         return {"enabled": control.enabled, "max_order_value": control.max_order_value}
     finally:
         db.close()
+
+
+@router.get("/auth/zerodha/login")
+def zerodha_login():
+    if not settings.kite_api_key or not settings.kite_api_secret:
+        raise HTTPException(status_code=503, detail="Configure KITE_API_KEY and KITE_API_SECRET in backend .env first")
+    from kiteconnect import KiteConnect
+    kite = KiteConnect(api_key=settings.kite_api_key)
+    return RedirectResponse(kite.login_url())
+
+
+@router.get("/auth/zerodha/callback")
+async def zerodha_callback(request_token: str, status: str = "success"):
+    if status != "success":
+        raise HTTPException(status_code=401, detail="Zerodha login was not completed")
+    if not settings.kite_api_key or not settings.kite_api_secret:
+        raise HTTPException(status_code=503, detail="Kite API credentials are not configured")
+    try:
+        from kiteconnect import KiteConnect
+        kite = KiteConnect(api_key=settings.kite_api_key)
+        session = kite.generate_session(request_token, api_secret=settings.kite_api_secret)
+        settings.kite_access_token = session["access_token"]
+        market_stream.start()
+    except Exception as exc:
+        raise HTTPException(status_code=401, detail=f"Could not complete Kite login: {exc}") from exc
+    frontend = settings.cors_origin_list[0] if settings.cors_origin_list else "http://localhost:5173"
+    return RedirectResponse(f"{frontend}/?kite=connected", status_code=303)
+
+
+@router.get("/auth/zerodha/status")
+def zerodha_auth_status():
+    return {
+        "configured": bool(settings.kite_api_key and settings.kite_api_secret),
+        "authenticated": bool(settings.kite_access_token),
+        "provider": settings.market_data_provider,
+        "stream_connected": market_stream.connected,
+    }
