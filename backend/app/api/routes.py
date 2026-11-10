@@ -169,8 +169,15 @@ def history(symbol: str, interval: str = "day", days: int = Query(365, ge=30, le
 
 
 @router.get("/signals")
-def signals(symbols: str = ",".join(DEFAULT_SYMBOLS)):
-    requested = [symbol.strip().upper() for symbol in symbols.split(",") if symbol.strip()]
+def signals(symbols: str | None = None):
+    if symbols is None:
+        db: Session = SessionLocal()
+        try:
+            requested = [row.symbol for row in db.query(WatchlistItem).order_by(WatchlistItem.id).all()] or DEFAULT_SYMBOLS
+        finally:
+            db.close()
+    else:
+        requested = [symbol.strip().upper() for symbol in symbols.split(",") if symbol.strip()]
     if not requested or len(requested) > 30:
         raise HTTPException(status_code=400, detail="Provide between 1 and 30 symbols")
     return {"signals": get_signals(requested), "provider": get_market_data_provider().name}
