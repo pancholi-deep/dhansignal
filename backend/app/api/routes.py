@@ -1,6 +1,7 @@
 import asyncio
 import json
 import re
+import yfinance as yf
 from pathlib import Path
 from datetime import timezone
 from pydantic import BaseModel, Field
@@ -90,6 +91,36 @@ def watchlist():
     finally:
         db.close()
     return {"symbols": symbols, "quotes": market.get_quotes(symbols), "provider": market.name, "is_live": market.is_live}
+
+
+@router.get("/market/instruments/search")
+def search_market_instruments(q: str = Query(..., min_length=1, max_length=40)):
+    """Search Yahoo Finance's NSE/BSE instrument directory for watchlist autocomplete."""
+    term = q.strip()
+    if not term:
+        return {"results": []}
+    try:
+        response = yf.Search(term, max_results=12)
+        results = []
+        seen = set()
+        for item in response.quotes or []:
+            ticker = str(item.get("symbol") or "").upper()
+            exchange = str(item.get("exchange") or "").upper()
+            quote_type = str(item.get("quoteType") or "").upper()
+            if not ticker.endswith((".NS", ".BO")) or quote_type not in {"EQUITY", "ETF"}:
+                continue
+            symbol = ticker.rsplit(".", 1)[0]
+            if symbol in seen:
+                continue
+            seen.add(symbol)
+            results.append({
+                "symbol": symbol,
+                "name": str(item.get("shortname") or item.get("longname") or symbol),
+                "exchange": "BSE" if ticker.endswith(".BO") else "NSE",
+            })
+        return {"results": results[:10]}
+    except Exception:
+        return {"results": []}
 
 
 @router.post("/market/watchlist/{symbol}")
