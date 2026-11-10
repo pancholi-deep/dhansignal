@@ -88,7 +88,7 @@ export default function Dashboard() {
 
   return <div className="app-shell">
     <aside className="sidebar">
-      <div className="brand"><div className="brand-mark"><ChartNoAxesCombined size={22}/></div><div><strong>DhanSignal</strong><span>MARKET INTELLIGENCE</span></div></div>
+      <div className="brand"><div className="brand-mark"><img src="/dhansignal.svg" alt="DhanSignal logo"/></div><div><strong>DhanSignal</strong><span>MARKET INTELLIGENCE</span></div></div>
       <div className="nav-label">WORKSPACE</div>
       <a className="nav-item active" href="#overview"><Activity size={18}/> Overview</a><a className="nav-item" href="#signals"><ChartNoAxesCombined size={18}/> Signals</a><a className="nav-item" href="#portfolio"><CircleDollarSign size={18}/> Portfolio</a>
       <div className="nav-label second">PAPER TRADING</div><a className="nav-item" href="#simulator"><CircleDollarSign size={18}/> Simulator</a><a className="nav-item" href="#journal"><Activity size={18}/> Trade journal</a>
