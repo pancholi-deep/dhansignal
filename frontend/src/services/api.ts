@@ -17,6 +17,7 @@ export const api = {
   addWatchlistSymbol: (symbol: string) => request<{ message: string; symbol: string }>(`/market/watchlist/${encodeURIComponent(symbol)}`, { method: 'POST' }),
   removeWatchlistSymbol: (symbol: string) => request<{ message: string; symbol: string }>(`/market/watchlist/${encodeURIComponent(symbol)}`, { method: 'DELETE' }),
   signals: () => request<{ signals: Signal[]; provider: string }>('/signals'),
+  stockIntelligence: (symbol: string) => request<StockIntelligence>(`/intelligence/${encodeURIComponent(symbol)}`, { method: 'POST' }),
   account: () => request<PaperAccount>('/paper/account'),
   paperControl: () => request<PaperControl>('/paper/control'),
   updatePaperControl: (enabled: boolean) => request<PaperControl>('/paper/control', { method: 'PUT', body: JSON.stringify({ enabled }) }),
