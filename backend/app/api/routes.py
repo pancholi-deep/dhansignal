@@ -144,7 +144,7 @@ def place_paper_order(order: PaperOrderRequest):
                 db.add(position)
                 db.flush()
             new_quantity = position.quantity + order.quantity
-            position.average_price = ((position.quantity * position.average_price) + notional) / new_quantity
+            position.average_price = ((position.quantity * position.average_price) + notional + fees) / new_quantity
             position.quantity = new_quantity
             account.cash_balance -= total_cost
             realized = 0.0
