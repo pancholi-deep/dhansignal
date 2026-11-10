@@ -1,4 +1,4 @@
-import type { Overview, Signal, WatchlistResponse, Candle, PaperAccount, PaperTrade, PaperOrderResult, ResearchDocument } from '../types'
+import type { Overview, Signal, WatchlistResponse, Candle, PaperAccount, PaperTrade, PaperOrderResult, ResearchDocument, ResearchEvidence } from '../types'
 
 const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1'
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -21,6 +21,8 @@ export const api = {
   searchResearch: (q: string, symbol?: string) => request<{ results: ResearchDocument[]; count: number }>(
     `/research/search?q=${encodeURIComponent(q)}${symbol ? `&symbol=${encodeURIComponent(symbol)}` : ''}`
   ),
+  retrieveResearch: (q: string, symbol?: string) => request<{ query: string; results: ResearchEvidence[]; count: number; retrieval: string }>(`/research/retrieve?q=${encodeURIComponent(q)}${symbol ? `&symbol=${encodeURIComponent(symbol)}` : ''}`),
+  indexResearch: (id: number) => request<{ document_id: number; chunk_count?: number; message: string }>(`/research/documents/${id}/index`, { method: 'POST' }),
   uploadResearch: async (form: FormData) => {
     const response = await fetch(`${API}/research/documents`, { method: 'POST', body: form })
     if (!response.ok) { const body = await response.json().catch(() => null); throw new Error(body?.detail || `Upload failed (${response.status})`) }
