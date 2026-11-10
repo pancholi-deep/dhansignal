@@ -14,6 +14,7 @@ from app.core.config import settings
 from app.market_data.factory import get_market_data_provider
 from app.market_data.demo import DEFAULT_SYMBOLS
 from app.services.market import get_signals
+from app.services.intelligence import generate_stock_intelligence
 from app.services.stream import market_stream
 from app.strategies.technical import add_indicators
 from app.services.research import MAX_PDF_BYTES, ResearchFileError, chunk_pdf, inspect_pdf, save_pdf, rank_chunks
@@ -223,6 +224,23 @@ def signals(symbols: str | None = None):
     if not requested or len(requested) > 30:
         raise HTTPException(status_code=400, detail="Provide between 1 and 30 symbols")
     return {"signals": get_signals(requested), "provider": get_market_data_provider().name}
+
+
+@router.post("/intelligence/{symbol}")
+def stock_intelligence(symbol: str):
+    """Generate a cached Gemini analysis from current market and technical data."""
+    symbol = symbol.strip().upper()
+    if not re.fullmatch(r"[A-Z0-9&_-]{1,32}", symbol):
+        raise HTTPException(status_code=400, detail="Enter a valid NSE trading symbol")
+    try:
+        return generate_stock_intelligence(symbol)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        status = 503 if "not configured" in str(exc).lower() else 502
+        raise HTTPException(status_code=status, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Could not generate stock intelligence: {exc}") from exc
 
 
 @router.get("/paper/account")
