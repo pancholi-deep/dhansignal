@@ -11,14 +11,17 @@ import { api } from '../services/api'
 
 const SYMBOLS = ['RELIANCE', 'HDFCBANK', 'INFY', 'ICICIBANK', 'TCS', 'LT']
 const WINDOWS = [
-  { label: '1M', days: 30 },
-  { label: '3M', days: 90 },
-  { label: '6M', days: 180 },
-  { label: '1Y', days: 365 },
+  { label: '1D', interval: '5minute', days: 1 },
+  { label: '5D', interval: '15minute', days: 5 },
+  { label: '1M', interval: 'day', days: 30 },
+  { label: '3M', interval: 'day', days: 90 },
+  { label: '6M', interval: 'day', days: 180 },
+  { label: '1Y', interval: 'day', days: 365 },
 ]
 
 function chartTime(date: string): UTCTimestamp {
-  return Math.floor(new Date(`${date}T00:00:00Z`).getTime() / 1000) as UTCTimestamp
+  const value = date.includes('T') ? date : `${date}T00:00:00Z`
+  return Math.floor(new Date(value).getTime() / 1000) as UTCTimestamp
 }
 
 const chartOptions = {
@@ -33,7 +36,7 @@ const chartOptions = {
   },
   crosshair: { mode: CrosshairMode.Normal },
   rightPriceScale: { borderColor: '#374151' },
-  timeScale: { borderColor: '#374151', timeVisible: false, rightOffset: 5 },
+  timeScale: { borderColor: '#374151', timeVisible: true, secondsVisible: false, rightOffset: 5 },
 }
 
 export default function StockChart({ quotes }: { quotes: Quote[] }) {
@@ -44,7 +47,7 @@ export default function StockChart({ quotes }: { quotes: Quote[] }) {
   const candleSeriesRef = useRef<any>(null)
   const volumeSeriesRef = useRef<any>(null)
   const [symbol, setSymbol] = useState('RELIANCE')
-  const [days, setDays] = useState(180)
+  const [window, setWindow] = useState(WINDOWS[3])
   const [candles, setCandles] = useState<Candle[]>([])
   const [provider, setProvider] = useState('')
   const [isLive, setIsLive] = useState(false)
@@ -59,10 +62,10 @@ export default function StockChart({ quotes }: { quotes: Quote[] }) {
       setLoading(true)
       setError('')
       try {
-        const response = await api.history(symbol, 365)
+        const response = await api.history(symbol, window.days, window.interval)
         if (cancelled) return
         const cutoff = new Date()
-        cutoff.setDate(cutoff.getDate() - days)
+        cutoff.setDate(cutoff.getDate() - window.days)
         setCandles(response.candles.filter(candle => new Date(candle.date) >= cutoff))
         setProvider(response.provider)
         setIsLive(response.is_live)
@@ -78,7 +81,7 @@ export default function StockChart({ quotes }: { quotes: Quote[] }) {
 
     void loadHistory()
     return () => { cancelled = true }
-  }, [symbol, days])
+  }, [symbol, window])
 
   useEffect(() => {
     if (!candles.length || !priceRef.current || !volumeRef.current || !rsiRef.current || !macdRef.current) return
@@ -146,13 +149,14 @@ export default function StockChart({ quotes }: { quotes: Quote[] }) {
     if (liveQuote.timestamp && Date.now() - new Date(liveQuote.timestamp).getTime() > 60_000) return
     const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date())
     const previous = candles[candles.length - 1]
+    if (window.interval !== 'day') return
     const time = chartTime(today)
     const open = liveQuote.open && liveQuote.open > 0 ? liveQuote.open : (previous.date === today ? previous.open : previous.close)
     const high = Math.max(liveQuote.last_price, liveQuote.high || open, previous.date === today ? previous.high : open)
     const low = Math.min(liveQuote.last_price, liveQuote.low || open, previous.date === today ? previous.low : open)
     candleSeriesRef.current.update({ time, open, high, low, close: liveQuote.last_price })
     volumeSeriesRef.current.update({ time, value: liveQuote.volume, color: liveQuote.last_price >= open ? 'rgba(34,197,94,0.55)' : 'rgba(239,68,68,0.55)' })
-  }, [liveQuote, candles])
+  }, [liveQuote, candles, window])
 
   return (
     <section className="section stock-chart-section">
@@ -165,9 +169,9 @@ export default function StockChart({ quotes }: { quotes: Quote[] }) {
           {SYMBOLS.map(item => <option key={item} value={item}>{item}</option>)}
         </select>
         <div className="chart-periods">
-          {WINDOWS.map(window => (
-            <button key={window.label} className={days === window.days ? 'selected' : ''} onClick={() => setDays(window.days)}>
-              {window.label}
+          {WINDOWS.map(option => (
+            <button key={option.label} className={window.label === option.label ? 'selected' : ''} onClick={() => setWindow(option)}>
+              {option.label}
             </button>
           ))}
         </div>
