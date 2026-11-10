@@ -47,7 +47,7 @@ class TapetideYahooProvider(MarketDataProvider):
         for item in data if isinstance(data, list) else []:
             symbol = str(item.get("symbol") or item.get("tradingsymbol") or "").upper()
             price = item.get("ltp", item.get("price", item.get("last_price")))
-            if not symbol or price is None:
+            if not symbol or item.get("found", True) is False or price is None:
                 continue
             quotes.append({
                 "symbol": symbol, "exchange": str(item.get("exchange") or "NSE"),
@@ -57,7 +57,7 @@ class TapetideYahooProvider(MarketDataProvider):
                 "timestamp": item.get("last_trade_at") or (payload.get("meta") or {}).get("as_of"),
                 "open": float(item.get("open") or 0), "high": float(item.get("high") or 0),
                 "low": float(item.get("low") or 0),
-                "close": float(item.get("previous_close") or item.get("close") or 0),
+                "close": float(item.get("prev_close") or item.get("previous_close") or item.get("close") or 0),
                 "source": "tapetide_rest",
             })
         return quotes
