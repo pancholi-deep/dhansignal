@@ -87,6 +87,20 @@ API endpoints:
 - `POST /api/v1/paper/orders` with `{ "symbol": "RELIANCE", "side": "BUY", "quantity": 1 }`
 - `GET /api/v1/paper/trades?limit=50`
 
+
+## Company research library — ingestion milestone
+
+The research workspace accepts PDF sources in six categories: annual reports, management discussion and analysis, earnings-call transcripts, technical charts, financial screeners, and shareholding patterns. Uploads are associated with a company name and optional NSE symbol/reporting period. PDF text is extracted and stored alongside metadata; original PDFs are persisted in the `dhansignal_research` Docker volume. SHA-256 duplicate detection avoids storing the same PDF twice.
+
+Research API endpoints:
+
+- `POST /api/v1/research/documents` — multipart PDF upload with `file`, `document_type`, `company_name`, optional `title`, `symbol`, and `reporting_period`.
+- `GET /api/v1/research/documents` — list documents, optionally filter by `document_type` or `symbol`.
+- `GET /api/v1/research/documents/{id}` — retrieve metadata and extracted text.
+- `GET /api/v1/research/search?q=...` — keyword search over extracted text, with snippets.
+
+Current ingestion limits: PDF only, maximum 20 MB, text-based PDFs only. Scanned/image-only PDFs need OCR and are not processed in this milestone. Search is PostgreSQL keyword matching, not semantic/vector retrieval. No LLM-generated analysis is produced yet. The current app has no user authentication or per-user document isolation; run it only in a trusted local environment until access controls are implemented.
+
 ## Project layout
 
 ```text
