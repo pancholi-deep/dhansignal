@@ -58,11 +58,10 @@ docker compose down -v
 - `GET /api/v1/market/watchlist`
 - `GET /api/v1/market/quotes?symbols=RELIANCE,HDFCBANK,INFY`
 - `GET /api/v1/market/history/{symbol}?interval=day&days=180`
-- `WS /api/v1/market/stream` — live Kite ticks for the starter NSE watchlist (demo snapshots when using the demo provider)
 - `GET /api/v1/signals?symbols=RELIANCE,HDFCBANK,INFY`
 - `GET /api/v1/paper/account`
 - `GET /api/v1/paper/control` and `PUT /api/v1/paper/control` — persistent simulator pause/resume switch
-- `WS /api/v1/market/stream` — streamed tick/snapshot feed
+- `WS /api/v1/market/stream` — live Kite ticks for the starter NSE watchlist (demo snapshots when using the demo provider)
 
 ## Experimental technical signal engine
 
