@@ -32,7 +32,7 @@ export default function Dashboard() {
     <aside className="sidebar">
       <div className="brand"><div className="brand-mark"><ChartNoAxesCombined size={22}/></div><div><strong>DhanSignal</strong><span>MARKET INTELLIGENCE</span></div></div>
       <div className="nav-label">WORKSPACE</div>
-      <a className="nav-item active"><Activity size={18}/> Overview</a><a className="nav-item"><ChartNoAxesCombined size={18}/> Market scanner</a><a className="nav-item"><BrainCircuit size={18}/> AI research <span className="soon">SOON</span></a><a className="nav-item"><Wallet size={18}/> Portfolio</a>
+      <a className="nav-item active"><Activity size={18}/> Overview</a><a className="nav-item"><ChartNoAxesCombined size={18}/> Market scanner</a><a className="nav-item"><BrainCircuit size={18}/> AI research</a><a className="nav-item"><Wallet size={18}/> Portfolio</a>
       <div className="nav-label second">PAPER TRADING</div><a className="nav-item"><CircleDollarSign size={18}/> Simulator</a><a className="nav-item"><Clock3 size={18}/> Trade journal</a>
       <div className="sidebar-bottom"><div className="secure"><ShieldCheck size={16}/><span>Broker credentials stay<br/>on your backend</span></div><div className="user"><div className="avatar">D</div><div><strong>Personal workspace</strong><span>Free development mode</span></div></div></div>
     </aside>
