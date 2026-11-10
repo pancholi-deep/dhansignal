@@ -27,18 +27,22 @@ class MarketStream:
         if not settings.kite_api_key or not settings.kite_access_token:
             logger.warning("Kite stream not started: API key/access token missing")
             return
-        from kiteconnect import KiteConnect, KiteTicker
+        try:
+            from kiteconnect import KiteConnect, KiteTicker
 
-        self.loop = asyncio.get_event_loop()
-        client = KiteConnect(api_key=settings.kite_api_key)
-        client.set_access_token(settings.kite_access_token)
-        instruments = client.instruments("NSE")
-        wanted = set(DEFAULT_SYMBOLS)
-        self.tokens = {
-            int(row["instrument_token"]): row["tradingsymbol"]
-            for row in instruments if row["tradingsymbol"] in wanted and row["segment"] == "NSE"
-        }
-        self.ticker = KiteTicker(settings.kite_api_key, settings.kite_access_token)
+            self.loop = asyncio.get_running_loop()
+            client = KiteConnect(api_key=settings.kite_api_key)
+            client.set_access_token(settings.kite_access_token)
+            instruments = client.instruments("NSE")
+            wanted = set(DEFAULT_SYMBOLS)
+            self.tokens = {
+                int(row["instrument_token"]): row["tradingsymbol"]
+                for row in instruments if row["tradingsymbol"] in wanted and row["segment"] == "NSE"
+            }
+            self.ticker = KiteTicker(settings.kite_api_key, settings.kite_access_token)
+        except Exception:
+            logger.exception("Could not initialise Kite market stream; API will continue without streaming")
+            return
 
         def on_connect(ws, response):
             token_ids = list(self.tokens)
@@ -78,7 +82,10 @@ class MarketStream:
         self.ticker.on_connect = on_connect
         self.ticker.on_ticks = on_ticks
         self.ticker.on_error = lambda ws, code, reason: logger.error("Kite stream error %s: %s", code, reason)
-        self.ticker.connect(threaded=True)
+        try:
+            self.ticker.connect(threaded=True)
+        except Exception:
+            logger.exception("Could not start Kite WebSocket connection")
 
     async def publish(self, message: dict):
         dead = []
