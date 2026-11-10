@@ -94,6 +94,8 @@ class MarketStream:
         def on_error(ws, code, reason):
             self.connected = False
             logger.error("Kite stream error %s: %s", code, reason)
+            if self.loop and not self.loop.is_closed():
+                asyncio.run_coroutine_threadsafe(self.publish({"type": "status", "provider": "ZERODHA KITE CONNECT", "is_live": False, "data": []}), self.loop)
         self.ticker.on_error = on_error
         try:
             self.ticker.connect(threaded=True)
