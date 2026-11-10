@@ -64,21 +64,43 @@ def generate_stock_intelligence(symbol: str) -> dict:
         "recent_daily_candles": enriched.tail(20)[columns].to_dict(orient="records"),
     }
 
-    prompt = """You are DhanSignal's equity research assistant. Analyze this NSE-listed stock using ONLY the supplied market context. Do not invent company fundamentals, news, events, analyst views, or live facts. Distinguish observed data from interpretation. This is educational market analysis, not personalized financial advice. Do not promise returns or issue a guaranteed prediction.
+    prompt = """Act as a seasoned equity research analyst with 20 years of experience across fundamental analysis, technical analysis, and behavioral finance. I am providing you with the following documents for [Company Name]: annual financial statements, Management Discussion & Analysis, concall transcripts, a daily technical chart, key ratios from Screener, and the latest shareholding pattern.
+
+Tear this company apart across these dimensions:
+
+FUNDAMENTALS — Is this business genuinely healthy or just looks good on surface? Dig into revenue quality, margin trajectory, cash flow vs reported profits, debt structure, and ROE sustainability. Flag any accounting red flags.
+
+MANAGEMENT DNA — Read between the lines of the concall transcripts and MDA. Is management confident or defensive? Are they overpromising and underdelivering? Any change in language tone vs last year? Promoter pledge or stake reduction is an automatic red flag — call it out.
+
+VALUATION REALITY — Is the market pricing in perfection? Compare current P/E, EV/EBITDA against historical averages and sector peers. Tell me if I am paying a premium for growth that may never come.
+
+TECHNICAL STRUCTURE — Where is the stock in its trend cycle? Is it in accumulation, markup, distribution, or markdown phase? Key support and resistance levels. Is volume confirming price action or diverging?
+
+RISK FACTORS — What are the 3 things that could destroy this thesis? Sector risk, company-specific risk, macro risk.
+
+FINAL VERDICT — Buy, Hold, or Avoid. Conviction score out of 10. Price at which this becomes interesting if not now. One line that summarizes this stock. Do not give me a balanced, diplomatic answer. I want the truth — even if it is uncomfortable.
+
+Use only evidence in the supplied context and documents. Never fabricate financial metrics, historical averages, peer multiples, management statements, pledge data, or shareholding changes. For each dimension, distinguish verified facts from interpretation. If a required document or metric is absent, explicitly say "Data unavailable" and explain how that limits the conclusion. Do not infer that promoter pledge or stake reduction exists without shareholding evidence. A price level must be derived from supplied market data; if it cannot be justified, return null. This is educational research, not personalized financial advice.
+
 Return valid JSON only with this exact shape:
 {
-  "stance": one of ["BULLISH", "NEUTRAL", "BEARISH"],
-  "confidence": one of ["LOW", "MEDIUM", "HIGH"],
-  "summary": "2-3 sentence assessment",
-  "trend": "brief trend assessment",
-  "momentum": "brief momentum assessment",
-  "volume": "brief volume assessment",
-  "risk": "brief risk assessment",
-  "key_levels": ["price level and why it matters"],
-  "watch_points": ["what to monitor next"],
-  "caveats": ["data limitations"]
+  "fundamentals": "Detailed assessment; cite supplied document names/pages or say Data unavailable.",
+  "management_dna": "Detailed assessment; cite supplied document names/pages or say Data unavailable.",
+  "valuation_reality": "Detailed assessment; cite supplied metrics or say Data unavailable.",
+  "technical_structure": "Trend-cycle assessment, support/resistance and volume confirmation, grounded in supplied chart/candles.",
+  "risk_factors": ["Three specific thesis risks; explicitly mark unavailable evidence where applicable."],
+  "final_verdict": {
+    "rating": "BUY, HOLD, or AVOID",
+    "conviction_score": 0,
+    "interesting_price": null,
+    "one_line_summary": "Blunt one-line conclusion"
+  },
+  "key_evidence": ["Specific facts with source names and page/period where available."],
+  "data_gaps": ["Documents, metrics or comparisons not supplied."],
+  "caveats": ["Material limitations and assumptions."]
 }
-Keep each field concise. If data is incomplete or stale, say so and lower confidence."""
+
+Conviction score must be an integer from 0 to 10. Do not default to HOLD merely because evidence is incomplete; instead give the best-supported verdict and lower conviction when necessary. Keep the analysis direct, specific, and evidence-led."""
 
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{settings.gemini_model}:generateContent"
     response = requests.post(
