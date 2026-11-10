@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Activity, ArrowDownRight, ArrowUpRight, Bell, ChartNoAxesCombined, CircleDollarSign, Clock3, RefreshCw, Search, ShieldCheck, Wallet } from 'lucide-react'
 import { api } from '../services/api'
-import type { Overview, Signal, WatchlistResponse } from '../types'
+import type { Overview, Signal, WatchlistResponse, KiteAuthStatus } from '../types'
 import { MetricCard } from '../components/MetricCard'
 import { SignalTable } from '../components/SignalTable'
 import StockChart from '../components/StockChart'
@@ -17,12 +17,13 @@ export default function Dashboard() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
   const [streamStatus, setStreamStatus] = useState('Connecting market stream…')
+  const [kiteAuth, setKiteAuth] = useState<KiteAuthStatus | null>(null)
 
   async function refresh() {
     setLoading(true); setError('')
     try {
-      const [o, w, s, a] = await Promise.all([api.overview(), api.watchlist(), api.signals(), api.account()])
-      setOverview(o); setWatchlist(w); setSignals(s.signals); setAccount(a)
+      const [o, w, s, a, k] = await Promise.all([api.overview(), api.watchlist(), api.signals(), api.account(), api.kiteAuthStatus()])
+      setOverview(o); setWatchlist(w); setSignals(s.signals); setAccount(a); setKiteAuth(k)
     } catch (e) { setError(e instanceof Error ? e.message : 'Unable to connect to DhanSignal API') }
     finally { setLoading(false) }
   }
@@ -66,9 +67,9 @@ export default function Dashboard() {
     </aside>
     <main className="main-content">
       <header className="topbar"><div className="breadcrumb">Workspace <span>/</span> <strong>Overview</strong></div><div className="top-actions"><div className="market-clock"><span className="live-dot"/> NSE MARKET DATA</div><button className="icon-button" aria-label="Search"><Search size={18}/></button><button className="icon-button" aria-label="Notifications"><Bell size={18}/></button><button className="refresh-button" onClick={() => void refresh()}><RefreshCw size={15}/> Refresh</button></div></header>
-      <section className="page-heading"><div><div className="eyebrow">TUESDAY, 10 NOVEMBER 2026</div><h1>Market overview</h1><p>Your trading cockpit for the Indian equity markets.</p></div><div className="heading-right"><span className={`provider-tag ${overview?.is_live ? 'live' : 'demo'}`}><span/> {overview?.provider || 'CONNECTING...'}</span><span className="muted small">{overview?.is_live ? 'Live provider' : 'Synthetic demo feed'}</span></div></section>
+      <section className="page-heading"><div><div className="eyebrow">TUESDAY, 10 NOVEMBER 2026</div><h1>Market overview</h1><p>Your trading cockpit for the Indian equity markets.</p></div><div className="heading-right"><span className={`provider-tag ${overview?.is_live ? 'live' : 'demo'}`}><span/> {overview?.provider || 'CONNECTING...'}</span><span className="muted small">{overview?.is_live ? 'Live provider' : overview?.provider === 'ZERODHA KITE CONNECT' ? 'Login required for live data' : 'Synthetic demo feed'}</span>{kiteAuth?.configured && !kiteAuth.authenticated && <a className="refresh-button" href={(import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1').replace('/api/v1', '') + '/api/v1/auth/zerodha/login'}>Connect Zerodha</a>}</div></section>
       {error && <div className="error-banner">{error}. Start the API and database with <code>docker compose up --build</code>.</div>}
-      {!overview?.is_live && <div className="demo-banner"><Activity size={17}/><span><strong>Demo mode active.</strong> Prices and signals are synthetic placeholders, not NSE/BSE quotes. Configure Kite credentials to use your authorized market feed.</span></div>}
+      {overview?.provider === 'DEMO DATA' && <div className="demo-banner"><Activity size={17}/><span><strong>Demo mode active.</strong> Prices and signals are synthetic placeholders, not NSE/BSE quotes. Configure Kite credentials to use your authorized market feed.</span></div>}
       <section className="section"><div className="section-heading"><div><h2>Market pulse</h2><p>Index snapshots from the configured provider</p></div><span className="muted small">{loading ? 'Updating…' : streamStatus}</span></div><div className="metric-grid">{(overview?.indices || [{symbol:'NIFTY 50',last_price:0,change_percent:0},{symbol:'SENSEX',last_price:0,change_percent:0}]).map(index => <div className="index-card" key={index.symbol}><div className="index-top"><span>{index.symbol}</span><span className={index.change_percent >= 0 ? 'trend-up' : 'trend-down'}>{index.change_percent >= 0 ? <ArrowUpRight size={15}/> : <ArrowDownRight size={15}/>}{index.change_percent.toFixed(2)}%</span></div><div className="index-value">{index.last_price.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div><div className="sparkline"><span style={{width:`${Math.max(12, Math.min(100, 50 + index.change_percent * 12))}%`}}/></div></div>)}</div></section>
       <StockChart />
       <section className="section"><div className="section-heading"><div><h2>Paper trading account</h2><p>Virtual capital · No real orders are placed</p></div><span className="paper-tag">PAPER MODE</span></div><div className="account-grid"><MetricCard label="Starting capital" value={inr(account?.starting_cash ?? 100000)} change="Virtual allocation" positive/><MetricCard label="Available cash" value={inr(account?.cash_balance ?? 100000)} change="Ready to deploy" positive/><MetricCard label="Invested value" value={inr(account?.invested_value ?? 0)} change="No open positions"/><MetricCard label="Unrealized P&L" value={inr(account?.unrealized_pnl ?? 0)} change="After simulated fills"/></div></section>
