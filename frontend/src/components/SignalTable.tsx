@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import type { Signal } from '../types'
 
 const money = (value: number | null) =>
   value == null ? '—' : `₹${value.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
 
-export function SignalTable({ signals }: { signals: Signal[] }) {
+export function SignalTable({ signals, onPrepareTrade }: { signals: Signal[]; onPrepareTrade: (symbol: string) => void }) {
   const [expanded, setExpanded] = useState<string | null>(null)
 
   return (
@@ -25,8 +25,8 @@ export function SignalTable({ signals }: { signals: Signal[] }) {
         </thead>
         <tbody>
           {signals.map((signal) => (
-            <>
-              <tr key={signal.symbol}>
+            <Fragment key={signal.symbol}>
+              <tr>
                 <td className="symbol">{signal.symbol}</td>
                 <td>
                   <span className={`pill ${signal.action.toLowerCase()}`}>
@@ -40,7 +40,9 @@ export function SignalTable({ signals }: { signals: Signal[] }) {
                 <td>{money(signal.target_price)}</td>
                 <td>{signal.rsi_14.toFixed(1)}</td>
                 <td>
-                  <button
+                  <div className="signal-actions">
+                    {signal.action !== 'AVOID' && <button type="button" className="text-button" onClick={() => onPrepareTrade(signal.symbol)}>Prepare BUY</button>}
+                    <button
                     type="button"
                     className="text-button"
                     onClick={() =>
@@ -50,7 +52,8 @@ export function SignalTable({ signals }: { signals: Signal[] }) {
                     }
                   >
                     {expanded === signal.symbol ? 'Hide' : 'Details'}
-                  </button>
+                    </button>
+                  </div>
                 </td>
               </tr>
               {expanded === signal.symbol && (
@@ -64,7 +67,7 @@ export function SignalTable({ signals }: { signals: Signal[] }) {
                   </td>
                 </tr>
               )}
-            </>
+            </Fragment>
           ))}
         </tbody>
       </table>
