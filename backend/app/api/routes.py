@@ -1,3 +1,4 @@
+import asyncio
 import json
 import re
 from pathlib import Path
@@ -426,14 +427,13 @@ async def market_stream_socket(websocket: WebSocket):
                     "type": "snapshot", "provider": market.name, "is_live": False,
                     "data": quotes,
                 })
-                import asyncio
                 await asyncio.sleep(3)
         except WebSocketDisconnect:
             return
         except Exception:
             return
 
-    queue = __import__("asyncio").Queue(maxsize=10)
+    queue = asyncio.Queue(maxsize=10)
     market_stream.clients.add(queue)
     try:
         await websocket.send_json({
