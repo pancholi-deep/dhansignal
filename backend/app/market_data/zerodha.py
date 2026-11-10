@@ -9,10 +9,12 @@ class ZerodhaMarketDataProvider(MarketDataProvider):
     is_live = True
 
     def __init__(self, api_key: str, access_token: str):
-        if not api_key or not access_token:
-            raise RuntimeError("KITE_API_KEY and KITE_ACCESS_TOKEN are required for Zerodha mode")
+        if not api_key:
+            raise RuntimeError("KITE_API_KEY is required for Zerodha mode")
         self.client = KiteConnect(api_key=api_key)
-        self.client.set_access_token(access_token)
+        self.is_live = bool(access_token)
+        if access_token:
+            self.client.set_access_token(access_token)
         self._instrument_tokens: dict[str, int] = {}
         self._instrument_master_loaded = False
 
@@ -34,6 +36,8 @@ class ZerodhaMarketDataProvider(MarketDataProvider):
         return token
 
     def get_quotes(self, symbols: list[str]) -> list[dict]:
+        if not self.is_live:
+            return []
         from datetime import datetime, timezone
         from app.services.stream import market_stream
 
@@ -74,6 +78,8 @@ class ZerodhaMarketDataProvider(MarketDataProvider):
         return result
 
     def get_history(self, symbol: str, interval: str = "day", days: int = 180) -> pd.DataFrame:
+        if not self.is_live:
+            return pd.DataFrame()
         from datetime import datetime, timedelta
         token = self._token(symbol)
         end = datetime.now()
@@ -82,6 +88,8 @@ class ZerodhaMarketDataProvider(MarketDataProvider):
         return pd.DataFrame(rows).rename(columns={"date": "date"})
 
     def get_indices(self) -> list[dict]:
+        if not self.is_live:
+            return []
         raw = self.client.quote(["NSE:NIFTY 50", "BSE:SENSEX"])
         result = []
         for key, quote in raw.items():
