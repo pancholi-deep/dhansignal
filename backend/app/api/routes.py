@@ -1,15 +1,18 @@
 import json
+import re
+from pathlib import Path
 from datetime import timezone
 from pydantic import BaseModel, Field
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
-from app.db.models import PaperAccount, PaperPosition, PaperTrade, WatchlistItem
+from app.db.models import PaperAccount, PaperPosition, PaperTrade, ResearchDocument, WatchlistItem
 from app.core.config import settings
 from app.market_data.factory import get_market_data_provider
 from app.market_data.demo import DEFAULT_SYMBOLS
 from app.services.market import get_signals
 from app.strategies.technical import add_indicators
+from app.services.research import MAX_PDF_BYTES, ResearchFileError, inspect_pdf, save_pdf
 
 router = APIRouter()
 PAPER_FEE_RATE = 0.001  # 0.10% simulated fee per side
@@ -194,5 +197,132 @@ def paper_trades(limit: int = Query(50, ge=1, le=200)):
             "realized_pnl": round(t.realized_pnl, 2),
             "created_at": t.created_at.isoformat() if t.created_at else None,
         } for t in trades]}
+    finally:
+        db.close()
+
+
+RESEARCH_TYPES = {
+    "annual_report", "management_discussion", "earnings_transcript",
+    "technical_chart", "financial_screener", "shareholding_pattern",
+}
+
+
+def research_document_payload(document: ResearchDocument, include_text: bool = False):
+    payload = {
+        "id": document.id, "title": document.title,
+        "original_filename": document.original_filename,
+        "document_type": document.document_type,
+        "company_name": document.company_name, "symbol": document.symbol,
+        "reporting_period": document.reporting_period,
+        "file_size": document.file_size, "page_count": document.page_count,
+        "status": document.status,
+        "created_at": document.created_at.isoformat() if document.created_at else None,
+        "text_length": len(document.extracted_text or ""),
+    }
+    if include_text:
+        payload["extracted_text"] = document.extracted_text
+    return payload
+
+
+@router.post("/research/documents")
+async def upload_research_document(
+    file: UploadFile = File(...),
+    document_type: str = Form(...),
+    company_name: str = Form(...),
+    title: str | None = Form(None),
+    symbol: str | None = Form(None),
+    reporting_period: str | None = Form(None),
+):
+    document_type = document_type.strip().lower()
+    company_name = company_name.strip()
+    if document_type not in RESEARCH_TYPES:
+        raise HTTPException(status_code=400, detail=f"document_type must be one of: {', '.join(sorted(RESEARCH_TYPES))}")
+    if not company_name or len(company_name) > 160:
+        raise HTTPException(status_code=400, detail="company_name is required and must be at most 160 characters")
+    content = await file.read(MAX_PDF_BYTES + 1)
+    if len(content) > MAX_PDF_BYTES:
+        raise HTTPException(status_code=413, detail="PDF exceeds the 20 MB upload limit")
+    try:
+        extracted_text, page_count, digest = inspect_pdf(content)
+    except ResearchFileError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    db: Session = SessionLocal()
+    try:
+        existing = db.query(ResearchDocument).filter_by(sha256=digest).first()
+        if existing:
+            raise HTTPException(status_code=409, detail=f"This PDF is already uploaded as document #{existing.id}")
+        safe_name = Path(file.filename or "research.pdf").name[:255]
+        storage_path = save_pdf(content, digest)
+        doc = ResearchDocument(
+            title=(title or safe_name.rsplit(".", 1)[0]).strip()[:240],
+            original_filename=safe_name, document_type=document_type,
+            company_name=company_name, symbol=(symbol or "").strip().upper() or None,
+            reporting_period=(reporting_period or "").strip() or None,
+            storage_path=storage_path, mime_type="application/pdf",
+            file_size=len(content), sha256=digest, page_count=page_count,
+            extracted_text=extracted_text, status="processed",
+        )
+        db.add(doc)
+        db.commit()
+        db.refresh(doc)
+        return research_document_payload(doc)
+    finally:
+        db.close()
+
+
+@router.get("/research/documents")
+def list_research_documents(
+    document_type: str | None = None,
+    symbol: str | None = None,
+    limit: int = Query(100, ge=1, le=200),
+):
+    db: Session = SessionLocal()
+    try:
+        query = db.query(ResearchDocument)
+        if document_type:
+            if document_type not in RESEARCH_TYPES:
+                raise HTTPException(status_code=400, detail="Unsupported document_type")
+            query = query.filter(ResearchDocument.document_type == document_type)
+        if symbol:
+            query = query.filter(ResearchDocument.symbol == symbol.strip().upper())
+        documents = query.order_by(ResearchDocument.created_at.desc()).limit(limit).all()
+        return {"documents": [research_document_payload(doc) for doc in documents], "count": len(documents)}
+    finally:
+        db.close()
+
+
+@router.get("/research/documents/{document_id}")
+def get_research_document(document_id: int):
+    db: Session = SessionLocal()
+    try:
+        doc = db.query(ResearchDocument).filter_by(id=document_id).first()
+        if not doc:
+            raise HTTPException(status_code=404, detail="Research document not found")
+        return research_document_payload(doc, include_text=True)
+    finally:
+        db.close()
+
+
+@router.get("/research/search")
+def search_research_documents(q: str = Query(..., min_length=2, max_length=200), symbol: str | None = None, limit: int = Query(20, ge=1, le=100)):
+    term = q.strip()
+    db: Session = SessionLocal()
+    try:
+        query = db.query(ResearchDocument).filter(ResearchDocument.extracted_text.ilike(f"%{term}%"))
+        if symbol:
+            query = query.filter(ResearchDocument.symbol == symbol.strip().upper())
+        docs = query.order_by(ResearchDocument.created_at.desc()).limit(limit).all()
+        snippets = []
+        for doc in docs:
+            text_value = doc.extracted_text or ""
+            match = re.search(re.escape(term), text_value, re.IGNORECASE)
+            start = max(0, match.start() - 180) if match else 0
+            end = min(len(text_value), (match.end() + 220) if match else 400)
+            snippets.append({
+                **research_document_payload(doc),
+                "snippet": text_value[start:end].replace("\n", " "),
+            })
+        return {"query": term, "results": snippets, "count": len(snippets)}
     finally:
         db.close()
