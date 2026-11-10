@@ -44,7 +44,7 @@ export default function Dashboard() {
       socket.onmessage = event => {
         const message = JSON.parse(event.data) as { type: string; provider?: string; is_live?: boolean; data?: WatchlistResponse['quotes'] }
         if (message.data?.length) setWatchlist(previous => previous ? { ...previous, quotes: message.data!, provider: message.provider || previous.provider, is_live: message.is_live ?? previous.is_live } : previous)
-        if (message.provider) setStreamStatus(message.provider + (message.is_live ? ' · LIVE' : ' · DEMO'))
+        if (message.provider) setStreamStatus(message.provider === 'ZERODHA KITE CONNECT' ? message.provider + (message.is_live ? ' · STREAM LIVE' : ' · STREAM DISCONNECTED') : message.provider + ' · SYNTHETIC DEMO')
       }
       socket.onerror = () => setStreamStatus('Market stream reconnecting…')
       socket.onclose = () => { if (!stopped) retry = window.setTimeout(connect, 3000) }
