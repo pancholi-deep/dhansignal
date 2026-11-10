@@ -50,8 +50,8 @@ export default function ResearchWorkspace() {
     finally { setBusy(false) }
   }
 
-  async function search(event: React.FormEvent) {
-    event.preventDefault(); setError('')
+  async function search(event?: React.FormEvent) {
+    event?.preventDefault(); setError('')
     if (query.trim().length < 2) return
     try { const response = await api.searchResearch(query.trim(), symbol || undefined); setResults(response.results) }
     catch (e) { setError(e instanceof Error ? e.message : 'Search failed') }
@@ -79,7 +79,7 @@ export default function ResearchWorkspace() {
         {message && <div className="paper-success">{message}</div>}{error && <div className="paper-error">{error}</div>}
       </form>
       <div className="panel research-library">
-        <div className="research-library-head"><div><div className="paper-form-title">Research documents</div><div className="muted small">{documents.length} stored documents</div></div><button className="text-button" type="button" onClick={() => { setResults(null); setQuery('') }}>Show all</button></div>
+        <div className="research-library-head"><div><div className="paper-form-title">Research documents</div><div className="muted small">{documents.length} stored documents</div></div><button className="text-button" type="button" onClick={() => { setResults(null); setEvidence(null); setQuery('') }}>Show all</button></div>
         <form className="research-search" onSubmit={retrieve}><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Find evidence, e.g. revenue growth or debt…"/><button type="submit" disabled={query.trim().length < 2}>Find evidence</button><button type="button" className="text-button" onClick={search} disabled={query.trim().length < 2}>Keyword documents</button></form>
         {evidence && <div className="research-evidence-list">{evidence.map(item => <article className="research-evidence" key={item.id}><div className="research-doc-top"><strong>{item.title}</strong><span className="research-doc-type">Page {item.page_number}</span></div><div className="research-doc-meta">{item.company_name} · {item.symbol || "No symbol"} · {item.reporting_period || "Period not set"} · relevance {item.score}</div><p>{item.content}</p></article>)}{!evidence.length && <div className="paper-empty">No matching passages found.</div>}</div>}
         <div className="research-doc-list">
