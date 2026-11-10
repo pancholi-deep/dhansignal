@@ -239,6 +239,12 @@ async def upload_research_document(
         raise HTTPException(status_code=400, detail=f"document_type must be one of: {', '.join(sorted(RESEARCH_TYPES))}")
     if not company_name or len(company_name) > 160:
         raise HTTPException(status_code=400, detail="company_name is required and must be at most 160 characters")
+    if symbol and len(symbol.strip()) > 32:
+        raise HTTPException(status_code=400, detail="symbol must be at most 32 characters")
+    if reporting_period and len(reporting_period.strip()) > 80:
+        raise HTTPException(status_code=400, detail="reporting_period must be at most 80 characters")
+    if title and len(title.strip()) > 240:
+        raise HTTPException(status_code=400, detail="title must be at most 240 characters")
     content = await file.read(MAX_PDF_BYTES + 1)
     if len(content) > MAX_PDF_BYTES:
         raise HTTPException(status_code=413, detail="PDF exceeds the 20 MB upload limit")
@@ -253,9 +259,10 @@ async def upload_research_document(
         if existing:
             raise HTTPException(status_code=409, detail=f"This PDF is already uploaded as document #{existing.id}")
         safe_name = Path(file.filename or "research.pdf").name[:255]
+        title_value = (title or "").strip() or safe_name.rsplit(".", 1)[0]
         storage_path = save_pdf(content, digest)
         doc = ResearchDocument(
-            title=(title or safe_name.rsplit(".", 1)[0]).strip()[:240],
+            title=title_value[:240],
             original_filename=safe_name, document_type=document_type,
             company_name=company_name, symbol=(symbol or "").strip().upper() or None,
             reporting_period=(reporting_period or "").strip() or None,
