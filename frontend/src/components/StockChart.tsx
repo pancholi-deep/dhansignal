@@ -9,7 +9,6 @@ import type { UTCTimestamp } from 'lightweight-charts'
 import type { Candle, Quote } from '../types'
 import { api } from '../services/api'
 
-const SYMBOLS = ['RELIANCE', 'HDFCBANK', 'INFY', 'ICICIBANK', 'TCS', 'LT']
 const WINDOWS = [
   { label: '1D', interval: '5minute', days: 1 },
   { label: '5D', interval: '15minute', days: 5 },
@@ -53,6 +52,8 @@ export default function StockChart({ quotes, selectedSymbol, onSymbolChange }: {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const symbol = selectedSymbol
+  const symbols = Array.from(new Set([...quotes.map(item => item.symbol), selectedSymbol])).filter(Boolean)
+  const isDemo = provider === 'DEMO DATA'
   const liveQuote = quotes.find(item => item.symbol === symbol)
 
   useEffect(() => {
@@ -162,11 +163,11 @@ export default function StockChart({ quotes, selectedSymbol, onSymbolChange }: {
     <section className="section stock-chart-section" id="chart">
       <div className="section-heading">
         <div><h2>Technical analysis</h2><p>{symbol} · {window.interval === "day" ? "Daily candles" : window.interval === "5minute" ? "5-minute candles · 1 session" : "15-minute candles · 5 sessions"}</p></div>
-        <span className={`provider-tag ${isLive ? 'live' : 'demo'}`}><span />{provider || 'LOADING'}</span>
+        <span className={`provider-tag ${isDemo ? 'demo' : 'live'}`}><span />{provider || 'LOADING'}</span>
       </div>
       <div className="chart-toolbar">
         <select value={symbol} onChange={e => onSymbolChange(e.target.value)} aria-label="Select stock">
-          {SYMBOLS.map(item => <option key={item} value={item}>{item}</option>)}
+          {symbols.map(item => <option key={item} value={item}>{item}</option>)}
         </select>
         <div className="chart-periods">
           {WINDOWS.map(option => (
@@ -176,7 +177,7 @@ export default function StockChart({ quotes, selectedSymbol, onSymbolChange }: {
           ))}
         </div>
       </div>
-      {!isLive && provider && <div className="demo-banner chart-demo-notice">Synthetic demo prices — not actual NSE/BSE market quotes.</div>}
+      {isDemo && <div className="demo-banner chart-demo-notice">Synthetic demo prices — not actual NSE/BSE market quotes.</div>}
       {loading && <p className="chart-message">Loading historical data…</p>}
       {error && <p className="chart-error">{error}</p>}
       {!loading && !error && candles.length === 0 && <p className="chart-message">No historical candles available.</p>}
