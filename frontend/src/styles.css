@@ -61,3 +61,5 @@
 .research-evidence p { margin: 10px 0 0; color: var(--text-secondary, #aab5c5); font-size: 13px; line-height: 1.6; white-space: pre-wrap; }
 
 .paper-control-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+.signal-rationale { margin: 8px 0; padding-left: 20px; color: var(--text-secondary, #aab5c5); font-size: 12px; line-height: 1.7; }
