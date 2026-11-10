@@ -13,6 +13,7 @@ export const api = {
   overview: () => request<Overview>('/market/overview'),
   kiteAuthStatus: () => request<KiteAuthStatus>('/auth/zerodha/status'),
   watchlist: () => request<WatchlistResponse>('/market/watchlist'),
+  searchInstruments: (q: string) => request<{ results: InstrumentSuggestion[] }>(`/market/instruments/search?q=${encodeURIComponent(q)}`),
   addWatchlistSymbol: (symbol: string) => request<{ message: string; symbol: string }>(`/market/watchlist/${encodeURIComponent(symbol)}`, { method: 'POST' }),
   removeWatchlistSymbol: (symbol: string) => request<{ message: string; symbol: string }>(`/market/watchlist/${encodeURIComponent(symbol)}`, { method: 'DELETE' }),
   signals: () => request<{ signals: Signal[]; provider: string }>('/signals'),
