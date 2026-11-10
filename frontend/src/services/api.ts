@@ -1,4 +1,4 @@
-import type { Overview, Signal, WatchlistResponse, Candle, PaperAccount, PaperTrade, PaperOrderResult, ResearchDocument, ResearchEvidence, PaperControl } from '../types'
+import type { Overview, Signal, WatchlistResponse, Candle, PaperAccount, PaperTrade, PaperOrderResult, ResearchDocument, ResearchEvidence, PaperControl, KiteAuthStatus } from '../types'
 
 const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1'
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -11,6 +11,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 export const api = {
   overview: () => request<Overview>('/market/overview'),
+  kiteAuthStatus: () => request<KiteAuthStatus>('/auth/zerodha/status'),
   watchlist: () => request<WatchlistResponse>('/market/watchlist'),
   signals: () => request<{ signals: Signal[]; provider: string }>('/signals'),
   account: () => request<PaperAccount>('/paper/account'),
