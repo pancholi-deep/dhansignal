@@ -39,6 +39,8 @@ class ZerodhaMarketDataProvider(MarketDataProvider):
                 "change": change, "change_percent": (change / close * 100) if close else 0,
                 "volume": int(quote.get("volume", 0)),
                 "timestamp": quote.get("timestamp").isoformat() if quote.get("timestamp") else None,
+                "open": float(ohlc.get("open", 0)), "high": float(ohlc.get("high", 0)),
+                "low": float(ohlc.get("low", 0)), "close": close,
             })
         return result
 
