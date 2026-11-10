@@ -1,6 +1,9 @@
 from app.market_data.factory import get_market_data_provider
 from app.market_data.demo import DEFAULT_SYMBOLS
 from app.strategies.technical import generate_signal
+from datetime import datetime
+from zoneinfo import ZoneInfo
+import pandas as pd
 
 
 def provider():
@@ -19,11 +22,24 @@ def get_signals(symbols: list[str]):
         history = market.get_history(symbol, interval="day", days=240)
         quote = quotes.get(symbol)
         if quote and not history.empty:
-            index = history.index[-1]
-            history.loc[index, "close"] = float(quote.get("last_price") or history.loc[index, "close"])
-            history.loc[index, "high"] = max(float(history.loc[index, "high"]), float(quote.get("high") or quote.get("last_price") or 0))
-            history.loc[index, "low"] = min(float(history.loc[index, "low"]), float(quote.get("low") or quote.get("last_price") or history.loc[index, "low"]))
-            history.loc[index, "volume"] = float(quote.get("volume") or history.loc[index, "volume"])
+            today = datetime.now(ZoneInfo("Asia/Kolkata")).date()
+            last_date = pd.Timestamp(history.iloc[-1]["date"]).date()
+            live_row = {
+                "date": pd.Timestamp.now(tz="Asia/Kolkata"),
+                "open": float(quote.get("open") or quote.get("last_price") or history.iloc[-1]["open"]),
+                "high": float(quote.get("high") or quote.get("last_price") or history.iloc[-1]["high"]),
+                "low": float(quote.get("low") or quote.get("last_price") or history.iloc[-1]["low"]),
+                "close": float(quote.get("last_price") or history.iloc[-1]["close"]),
+                "volume": float(quote.get("volume") or history.iloc[-1]["volume"]),
+            }
+            if last_date < today:
+                history = pd.concat([history, pd.DataFrame([live_row])], ignore_index=True)
+            else:
+                index = history.index[-1]
+                history.loc[index, "close"] = live_row["close"]
+                history.loc[index, "high"] = max(float(history.loc[index, "high"]), live_row["high"])
+                history.loc[index, "low"] = min(float(history.loc[index, "low"]), live_row["low"])
+                history.loc[index, "volume"] = live_row["volume"]
         signal = generate_signal(symbol, history)
         if quote:
             signal["price"] = round(float(quote["last_price"]), 2)
