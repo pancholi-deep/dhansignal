@@ -30,3 +30,5 @@ export type ResearchDocument = {
   file_size: number; page_count: number; status: string; created_at: string | null
   text_length: number; snippet?: string
 }
+
+export type ResearchEvidence = { id: number; document_id: number; title: string; company_name: string; symbol: string | null; document_type: string; reporting_period: string | null; page_number: number; chunk_index: number; content: string; score: number; matched_terms: string[] }
