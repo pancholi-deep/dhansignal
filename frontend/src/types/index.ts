@@ -22,3 +22,11 @@ export type PaperTrade = {
   price: number; fees: number; realized_pnl: number; created_at: string | null
 }
 export type PaperOrderResult = { message: string; trade: PaperTrade; account: PaperAccount }
+
+
+export type ResearchDocument = {
+  id: number; title: string; original_filename: string; document_type: string
+  company_name: string; symbol: string | null; reporting_period: string | null
+  file_size: number; page_count: number; status: string; created_at: string | null
+  text_length: number; snippet?: string
+}
