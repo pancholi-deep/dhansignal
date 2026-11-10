@@ -1,3 +1,4 @@
+import json
 from fastapi import APIRouter, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
@@ -6,6 +7,7 @@ from app.core.config import settings
 from app.market_data.factory import get_market_data_provider
 from app.market_data.demo import DEFAULT_SYMBOLS
 from app.services.market import get_signals
+from app.strategies.technical import add_indicators
 
 router = APIRouter()
 
@@ -37,12 +39,29 @@ def quotes(symbols: str = Query(..., description="Comma-separated NSE symbols"))
 
 
 @router.get("/market/history/{symbol}")
-def history(symbol: str, interval: str = "day", days: int = Query(180, ge=30, le=2000)):
+def history(symbol: str, interval: str = "day", days: int = Query(365, ge=30, le=2000)):
     if interval not in {"minute", "5minute", "15minute", "30minute", "60minute", "day"}:
         raise HTTPException(status_code=400, detail="Unsupported candle interval")
     market = get_market_data_provider()
     frame = market.get_history(symbol.upper(), interval=interval, days=days)
-    return {"symbol": symbol.upper(), "provider": market.name, "is_live": market.is_live, "candles": frame.assign(date=frame.date.astype(str)).to_dict(orient="records")}
+    if frame.empty:
+        raise HTTPException(status_code=404, detail="No historical data found")
+
+    frame = add_indicators(frame)
+    frame["date"] = frame["date"].map(
+        lambda value: value.strftime("%Y-%m-%d")
+        if hasattr(value, "strftime")
+        else str(value)[:10]
+    )
+    # JSON serialization converts pandas NaN warm-up values to JSON null.
+    candles = json.loads(frame.to_json(orient="records"))
+
+    return {
+        "symbol": symbol.upper(),
+        "provider": market.name,
+        "is_live": market.is_live,
+        "candles": candles,
+    }
 
 
 @router.get("/signals")
