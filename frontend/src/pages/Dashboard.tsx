@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Activity, ArrowDownRight, ArrowUpRight, Bell, ChartNoAxesCombined, CircleDollarSign, RefreshCw, Search, ShieldCheck } from 'lucide-react'
 import { api } from '../services/api'
-import type { Overview, Signal, WatchlistResponse, KiteAuthStatus } from '../types'
+import type { Overview, Signal, WatchlistResponse, KiteAuthStatus, StockIntelligence } from '../types'
 import { MetricCard } from '../components/MetricCard'
 import { SignalTable } from '../components/SignalTable'
 import StockChart from '../components/StockChart'
@@ -13,6 +13,9 @@ export default function Dashboard() {
   const [overview, setOverview] = useState<Overview | null>(null)
   const [watchlist, setWatchlist] = useState<WatchlistResponse | null>(null)
   const [signals, setSignals] = useState<Signal[]>([])
+  const [intelligence, setIntelligence] = useState<StockIntelligence | null>(null)
+  const [intelligenceLoading, setIntelligenceLoading] = useState(false)
+  const [intelligenceError, setIntelligenceError] = useState('')
   const [account, setAccount] = useState<{ starting_cash: number; cash_balance: number; invested_value: number; unrealized_pnl: number; mode: string } | null>(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
@@ -38,6 +41,19 @@ export default function Dashboard() {
     }, 250)
     return () => { cancelled = true; window.clearTimeout(timer) }
   }, [watchlistInput, watchlist?.symbols.join(',')])
+
+  async function generateIntelligence() {
+    setIntelligenceLoading(true)
+    setIntelligenceError('')
+    setIntelligence(null)
+    try {
+      setIntelligence(await api.stockIntelligence(selectedSymbol))
+    } catch (e) {
+      setIntelligenceError(e instanceof Error ? e.message : 'Could not generate AI analysis')
+    } finally {
+      setIntelligenceLoading(false)
+    }
+  }
 
   async function manageWatchlist(action: 'add' | 'remove', symbol: string) {
     setWatchlistBusy(true)
@@ -124,6 +140,19 @@ export default function Dashboard() {
       {overview?.provider === 'DEMO DATA' && <div className="demo-banner"><Activity size={17}/><span><strong>Demo mode active.</strong> Prices and signals are synthetic placeholders, not NSE/BSE quotes. Configure Kite credentials to use your authorized market feed.</span></div>}
       <section className="section"><div className="section-heading"><div><h2>Market pulse</h2><p>Index snapshots from the configured provider</p></div><span className="muted small">{loading ? 'Updating…' : streamStatus}</span></div><div className="metric-grid">{(overview?.indices || [{symbol:'NIFTY 50',last_price:0,change_percent:0},{symbol:'SENSEX',last_price:0,change_percent:0}]).map(index => <div className="index-card" key={index.symbol}><div className="index-top"><span>{index.symbol}</span><span className={index.change_percent >= 0 ? 'trend-up' : 'trend-down'}>{index.change_percent >= 0 ? <ArrowUpRight size={15}/> : <ArrowDownRight size={15}/>}{index.change_percent.toFixed(2)}%</span></div><div className="index-value">{index.last_price.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div><div className="sparkline"><span style={{width:`${Math.max(12, Math.min(100, 50 + index.change_percent * 12))}%`}}/></div></div>)}</div></section>
       <StockChart quotes={watchlist?.quotes || []} symbols={watchlist?.symbols || []} selectedSymbol={selectedSymbol} onSymbolChange={setSelectedSymbol} />
+      <section className="section intelligence-section" id="intelligence">
+        <div className="section-heading"><div><h2>Gemini stock intelligence</h2><p>AI interpretation grounded in the selected stock's market snapshot and technical indicators</p></div><button className="intelligence-button" onClick={() => void generateIntelligence()} disabled={intelligenceLoading || !selectedSymbol}>{intelligenceLoading ? 'Analysing…' : intelligence ? 'Refresh analysis' : 'Analyse ' + selectedSymbol}</button></div>
+        {intelligenceError && <div className="intelligence-error" role="alert">{intelligenceError}</div>}
+        {intelligence && <div className="panel intelligence-panel">
+          <div className="intelligence-top"><div><span className="intelligence-symbol">{intelligence.symbol}</span><span className="intelligence-meta">{intelligence.model} · {intelligence.provider}{intelligence.cached ? ' · cached' : ''}</span></div><div className="intelligence-tags"><span className={'intelligence-stance ' + intelligence.analysis.stance.toLowerCase()}>{intelligence.analysis.stance}</span><span className="intelligence-confidence">{intelligence.analysis.confidence} CONFIDENCE</span></div></div>
+          <p className="intelligence-summary">{intelligence.analysis.summary}</p>
+          <div className="intelligence-grid">{[['Trend', intelligence.analysis.trend], ['Momentum', intelligence.analysis.momentum], ['Volume', intelligence.analysis.volume], ['Risk', intelligence.analysis.risk]].map(([label, value]) => <div className="intelligence-item" key={label}><strong>{label}</strong><p>{value}</p></div>)}</div>
+          <div className="intelligence-lists"><div><strong>Key levels</strong><ul>{intelligence.analysis.key_levels?.map((item, i) => <li key={i}>{item}</li>)}</ul></div><div><strong>What to watch</strong><ul>{intelligence.analysis.watch_points?.map((item, i) => <li key={i}>{item}</li>)}</ul></div></div>
+          {intelligence.analysis.caveats?.length > 0 && <div className="intelligence-caveats"><strong>Caveats</strong><ul>{intelligence.analysis.caveats.map((item, i) => <li key={i}>{item}</li>)}</ul></div>}
+          <div className="intelligence-disclaimer">{intelligence.disclaimer} Generated {new Date(intelligence.generated_at).toLocaleString('en-IN')}.</div>
+        </div>}
+        {!intelligence && !intelligenceError && !intelligenceLoading && <div className="intelligence-empty">Select a stock in the chart selector, then generate a Gemini-powered technical and risk assessment. Your Gemini API key stays on the backend.</div>}
+      </section>
       <section className="section" id="portfolio"><div className="section-heading"><div><h2>Paper trading account</h2><p>Virtual capital · No real orders are placed</p></div><span className="paper-tag">PAPER MODE</span></div><div className="account-grid"><MetricCard label="Starting capital" value={inr(account?.starting_cash ?? 100000)} change="Virtual allocation" positive/><MetricCard label="Available cash" value={inr(account?.cash_balance ?? 100000)} change="Ready to deploy" positive/><MetricCard label="Invested value" value={inr(account?.invested_value ?? 0)} change="No open positions"/><MetricCard label="Unrealized P&L" value={inr(account?.unrealized_pnl ?? 0)} change="After simulated fills"/></div></section>
       {/* Research document upload is parked while live trading is built. */}
       <div id="simulator"><PaperTrading symbols={watchlist?.symbols || ['RELIANCE', 'HDFCBANK', 'INFY', 'ICICIBANK', 'TCS', 'LT']} liveQuotes={watchlist?.quotes || []} selectedSymbol={selectedSymbol} tradeIntent={tradeIntent} /></div>
