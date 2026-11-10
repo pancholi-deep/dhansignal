@@ -36,3 +36,5 @@ export type ResearchEvidence = { id: number; document_id: number; title: string;
 export type MarketStreamMessage = { type: 'ticks' | 'snapshot' | 'status'; provider?: string; is_live?: boolean; data: Quote[] }
 
 export type PaperControl = { enabled: boolean; max_order_value: number }
+
+export type KiteAuthStatus = { configured: boolean; authenticated: boolean; provider: string; stream_connected: boolean }
