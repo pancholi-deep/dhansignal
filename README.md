@@ -26,7 +26,7 @@ An Indian-equity market intelligence and paper-trading platform. Phase 1 provide
 cp .env.example .env
 ```
 
-Keep `MARKET_DATA_PROVIDER=demo` for UI development; those prices are synthetic. For authorized live NSE market data, set `MARKET_DATA_PROVIDER=zerodha`, `KITE_API_KEY`, and a valid daily `KITE_ACCESS_TOKEN` in `.env`. Kite Connect's paid Connect plan is required for WebSocket live data and historical candles (currently ₹500/month per API key); the free Personal tier does not include market data. Never commit credentials or expose them to the browser. The access token expires daily and must be refreshed through the Kite login flow. Set the Kite app's redirect URL to `http://localhost:8000/api/v1/auth/zerodha/callback`; after restarting the backend, use **Connect Zerodha** in the dashboard. The generated access token is held in backend memory and is not written to source control or persisted across backend restarts.
+Keep `MARKET_DATA_PROVIDER=demo` for UI development; those prices are synthetic. For authorized live NSE market data, set `MARKET_DATA_PROVIDER=zerodha`, `KITE_API_KEY`, and a valid daily `KITE_ACCESS_TOKEN` in `.env`. Kite Connect's paid Connect plan is required for WebSocket live data and historical candles (currently ₹500/month per API key); the free Personal tier does not include market data. For Gemini-powered stock intelligence, add `GEMINI_API_KEY` to `.env` and optionally set `GEMINI_MODEL` (defaults to `gemini-2.5-flash`). The key is read only by FastAPI and is never sent to the browser. The dashboard's **Gemini stock intelligence** panel analyses the selected NSE symbol using its provider quote, up to 240 daily candles, EMA/RSI/MACD/ATR indicators, and the existing rule-based signal. It returns a concise stance, confidence, trend/momentum/volume/risk assessment, key levels, watch points and caveats. Results are cached in backend memory for five minutes. The model is deliberately instructed not to invent news or fundamentals; this milestone does not yet retrieve external news or company filings into the Gemini prompt. Configure `GEMINI_API_KEY` to enable the feature. Never commit credentials or expose them to the browser. The access token expires daily and must be refreshed through the Kite login flow. Set the Kite app's redirect URL to `http://localhost:8000/api/v1/auth/zerodha/callback`; after restarting the backend, use **Connect Zerodha** in the dashboard. The generated access token is held in backend memory and is not written to source control or persisted across backend restarts.
 
 ### 2. Start services
 
@@ -62,6 +62,7 @@ docker compose down -v
 - `GET /api/v1/market/quotes?symbols=RELIANCE,HDFCBANK,INFY`
 - `GET /api/v1/market/history/{symbol}?interval=day&days=180`
 - `GET /api/v1/signals?symbols=RELIANCE,HDFCBANK,INFY`
+- `POST /api/v1/intelligence/{symbol}` — Gemini-generated stock intelligence from the selected market snapshot and technical indicators
 - `GET /api/v1/paper/account`
 - `GET /api/v1/paper/control` and `PUT /api/v1/paper/control` — persistent simulator pause/resume switch
 
@@ -105,7 +106,7 @@ Research API endpoints:
 - `GET /api/v1/research/retrieve?q=...` — ranked evidence passages with document metadata and 1-based PDF page citations.
 - `POST /api/v1/research/documents/{id}/index` — build the page-aware index for a document uploaded before this milestone.
 
-Current ingestion limits: PDF only, maximum 20 MB, text-based PDFs only. Scanned/image-only PDFs need OCR and are not processed in this milestone. Each uploaded PDF is split into overlapping text passages while preserving 1-based PDF page numbers. The first evidence retriever is a dependency-free lexical ranker; it is not semantic/vector retrieval and does not understand paraphrases. Previously uploaded PDFs can be indexed with the document index endpoint. No LLM-generated analysis is produced yet. The current app has no user authentication or per-user document isolation; run it only in a trusted local environment until access controls are implemented.
+Current ingestion limits: PDF only, maximum 20 MB, text-based PDFs only. Scanned/image-only PDFs need OCR and are not processed in this milestone. Each uploaded PDF is split into overlapping text passages while preserving 1-based PDF page numbers. The first evidence retriever is a dependency-free lexical ranker; it is not semantic/vector retrieval and does not understand paraphrases. Previously uploaded PDFs can be indexed with the document index endpoint. Gemini stock intelligence is now available through `POST /api/v1/intelligence/{symbol}` when `GEMINI_API_KEY` is configured. It uses the market snapshot and technical indicators only; research-document evidence is not yet passed into Gemini. The current app has no user authentication or per-user document isolation; run it only in a trusted local environment until access controls are implemented.
 
 ## Project layout
 
