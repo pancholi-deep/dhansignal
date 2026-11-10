@@ -6,13 +6,13 @@ from pydantic import BaseModel, Field
 from fastapi import APIRouter, HTTPException, Query, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
-from app.db.models import PaperAccount, PaperPosition, PaperTrade, ResearchDocument, WatchlistItem
+from app.db.models import PaperAccount, PaperPosition, PaperTrade, ResearchChunk, ResearchDocument, WatchlistItem
 from app.core.config import settings
 from app.market_data.factory import get_market_data_provider
 from app.market_data.demo import DEFAULT_SYMBOLS
 from app.services.market import get_signals
 from app.strategies.technical import add_indicators
-from app.services.research import MAX_PDF_BYTES, ResearchFileError, inspect_pdf, save_pdf
+from app.services.research import MAX_PDF_BYTES, ResearchFileError, chunk_pdf, inspect_pdf, save_pdf, rank_chunks
 
 router = APIRouter()
 PAPER_FEE_RATE = 0.001  # 0.10% simulated fee per side
@@ -271,9 +271,12 @@ async def upload_research_document(
             extracted_text=extracted_text, status="processed",
         )
         db.add(doc)
+        db.flush()
+        chunks = chunk_pdf(content)
+        db.add_all([ResearchChunk(document_id=doc.id, **chunk) for chunk in chunks])
         db.commit()
         db.refresh(doc)
-        return research_document_payload(doc)
+        return {**research_document_payload(doc), "chunk_count": len(chunks)}
     finally:
         db.close()
 
@@ -331,5 +334,66 @@ def search_research_documents(q: str = Query(..., min_length=2, max_length=200),
                 "snippet": text_value[start:end].replace("\n", " "),
             })
         return {"query": term, "results": snippets, "count": len(snippets)}
+    finally:
+        db.close()
+
+
+
+@router.post("/research/documents/{document_id}/index")
+def index_research_document(document_id: int):
+    """Create page-aware chunks for a previously uploaded document."""
+    db: Session = SessionLocal()
+    try:
+        doc = db.query(ResearchDocument).filter_by(id=document_id).first()
+        if not doc:
+            raise HTTPException(status_code=404, detail="Research document not found")
+        if db.query(ResearchChunk).filter_by(document_id=doc.id).count():
+            return {"document_id": doc.id, "message": "Document is already indexed"}
+        try:
+            content = Path(doc.storage_path).read_bytes()
+            chunks = chunk_pdf(content)
+        except Exception as exc:
+            raise HTTPException(status_code=422, detail=f"Could not index stored PDF: {exc}") from exc
+        db.add_all([ResearchChunk(document_id=doc.id, **chunk) for chunk in chunks])
+        db.commit()
+        return {"document_id": doc.id, "chunk_count": len(chunks), "message": "Document indexed"}
+    finally:
+        db.close()
+
+
+@router.get("/research/retrieve")
+def retrieve_research_evidence(
+    q: str = Query(..., min_length=2, max_length=300),
+    symbol: str | None = None,
+    document_type: str | None = None,
+    limit: int = Query(8, ge=1, le=30),
+):
+    """Return ranked, page-cited evidence passages for analyst workflows."""
+    terms = re.findall(r"[a-zA-Z0-9₹]+", q.lower())
+    if not any(len(term) > 1 for term in terms):
+        raise HTTPException(status_code=400, detail="Query must contain searchable terms")
+    db: Session = SessionLocal()
+    try:
+        query = db.query(ResearchChunk, ResearchDocument).join(
+            ResearchDocument, ResearchChunk.document_id == ResearchDocument.id
+        )
+        if symbol:
+            query = query.filter(ResearchDocument.symbol == symbol.strip().upper())
+        if document_type:
+            if document_type not in RESEARCH_TYPES:
+                raise HTTPException(status_code=400, detail="Unsupported document_type")
+            query = query.filter(ResearchDocument.document_type == document_type)
+        rows = query.limit(5000).all()
+        candidates = []
+        for chunk, doc in rows:
+            candidates.append({
+                "id": chunk.id, "document_id": doc.id, "title": doc.title,
+                "company_name": doc.company_name, "symbol": doc.symbol,
+                "document_type": doc.document_type, "reporting_period": doc.reporting_period,
+                "page_number": chunk.page_number, "chunk_index": chunk.chunk_index,
+                "content": chunk.content,
+            })
+        ranked = rank_chunks(candidates, q)[:limit]
+        return {"query": q, "results": ranked, "count": len(ranked), "retrieval": "lexical-v1"}
     finally:
         db.close()
