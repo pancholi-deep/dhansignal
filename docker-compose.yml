@@ -26,6 +26,8 @@ services:
       DATABASE_URL: postgresql+psycopg://dhansignal:dhansignal_dev@db:5432/dhansignal
     ports:
       - "8000:8000"
+    volumes:
+      - dhansignal_research:/data/research
     depends_on:
       db:
         condition: service_healthy
@@ -43,3 +45,4 @@ services:
 
 volumes:
   dhansignal_pgdata:
+  dhansignal_research:
