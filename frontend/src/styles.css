@@ -150,3 +150,166 @@ html { scroll-behavior: smooth; scroll-padding-top: 18px; }
 .chart-help p{font-size:10px;line-height:1.6;color:#8fa1ba;margin-top:8px}
 @media(max-width:900px){.sidebar-collapsed{width:60px}.sidebar-collapsed .brand{padding:0 1px 28px}.sidebar-collapsed .nav-item{font-size:0!important}.sidebar-collapsed~.main-content{margin-left:60px}}
 @media(max-width:600px){.chart-heading-actions{gap:5px}.chart-collapse-button{padding:6px 7px;font-size:8px}.sidebar-collapsed{width:56px}.sidebar-collapsed~.main-content{margin-left:56px}}
+
+
+/* DhanSignal premium visual system — deep ink, midnight plum and champagne */
+:root{
+  color-scheme:dark;
+  --ds-bg:#080b14;
+  --ds-surface:#101624;
+  --ds-surface-raised:#151e2e;
+  --ds-border:rgba(172,188,216,.13);
+  --ds-muted:#8b98ae;
+  --ds-text:#edf1fa;
+  --ds-gold:#e7c58a;
+  --ds-gold-soft:#b99a6a;
+  --ds-teal:#58d6b0;
+}
+body{
+  color:var(--ds-text);
+  background:
+    radial-gradient(ellipse at 78% -12%,rgba(91,77,132,.22),transparent 35%),
+    radial-gradient(ellipse at 4% 24%,rgba(30,105,112,.12),transparent 28%),
+    var(--ds-bg);
+}
+.app-shell{background:transparent}
+.sidebar{
+  width:258px;padding:25px 17px 20px;
+  background:linear-gradient(180deg,rgba(17,24,39,.97),rgba(10,15,26,.98));
+  border-right:1px solid var(--ds-border);
+  box-shadow:14px 0 45px rgba(0,0,0,.12);
+  backdrop-filter:blur(18px);
+}
+.brand{padding:0 8px 34px}
+.brand-mark{width:42px;height:42px;border:1px solid rgba(231,197,138,.28);border-radius:14px;box-shadow:0 5px 22px rgba(0,0,0,.25)}
+.brand strong{font-size:20px;letter-spacing:-.8px}
+.brand span{font-size:8px;letter-spacing:1.8px;color:#9a8b78}
+.nav-label{color:#756d65;font-size:9px;letter-spacing:1.8px;padding-left:12px}
+.nav-label.second{margin-top:29px}
+.nav-item{height:45px;margin:4px 0;padding:0 13px;border:1px solid transparent;border-radius:10px;color:#9ba8bc;transition:all .18s ease}
+.nav-item:hover{background:rgba(255,255,255,.045);border-color:var(--ds-border);color:#f2e5d1}
+.nav-item.active{background:linear-gradient(100deg,rgba(193,157,103,.2),rgba(65,93,105,.16));border:1px solid rgba(231,197,138,.18);color:#f0d5a8;box-shadow:inset 3px 0 0 var(--ds-gold)}
+.nav-item.active:before{display:none}
+.secure{background:rgba(26,49,49,.45);border-color:rgba(88,214,176,.17);border-radius:11px}
+.avatar{background:linear-gradient(135deg,#b99461,#64547c);color:#fff}
+.sidebar-toggle{border-color:var(--ds-border);background:rgba(255,255,255,.035);color:#a7b2c5;border-radius:9px}
+.main-content{margin-left:258px;max-width:none;padding:0 clamp(22px,3.2vw,58px) 36px}
+.topbar{height:78px;border-bottom:1px solid var(--ds-border);gap:18px}
+.breadcrumb{font-size:11px;letter-spacing:.15px;color:#8592a7}
+.breadcrumb strong{color:#e9dfcf}
+.top-actions{gap:14px}
+.global-stock-picker{
+  display:flex;align-items:center;gap:10px;padding:6px 9px 6px 12px;
+  border:1px solid rgba(231,197,138,.24);border-radius:11px;
+  background:linear-gradient(135deg,rgba(231,197,138,.10),rgba(255,255,255,.025));
+  box-shadow:0 5px 20px rgba(0,0,0,.12)
+}
+.global-stock-picker>span{font-size:8px;font-weight:700;letter-spacing:1.15px;color:#b89b70;white-space:nowrap}
+.global-stock-picker select{min-width:135px;border:0;outline:0;background:transparent;color:#f2e6d2;font:700 12px Manrope,sans-serif;cursor:pointer}
+.global-stock-picker option{background:#111827;color:#edf1fa}
+.market-clock{color:#9a9eaa;font-size:8px;letter-spacing:1.2px}
+.live-dot,.provider-tag span{box-shadow:0 0 0 4px rgba(88,214,176,.10)}
+.refresh-button{border:1px solid rgba(231,197,138,.22);background:linear-gradient(135deg,rgba(231,197,138,.17),rgba(231,197,138,.06));color:#eed8b5;border-radius:9px;padding:9px 13px;transition:all .2s}
+.refresh-button:hover{background:rgba(231,197,138,.22);transform:translateY(-1px)}
+.icon-button{border-radius:8px}
+.icon-button:hover{background:rgba(255,255,255,.06);color:#e8d4b4}
+.page-heading{padding:38px 0 28px;align-items:center}
+.eyebrow{color:#b89b70;letter-spacing:2px}
+h1{font-size:clamp(26px,2.4vw,34px);letter-spacing:-1.2px;background:linear-gradient(100deg,#f6f1e8 10%,#d8c4a2 75%);background-clip:text;-webkit-background-clip:text;color:transparent}
+.page-heading p,.section-heading p{color:#8996aa;line-height:1.65}
+.provider-tag,.paper-tag{border-radius:7px;letter-spacing:.8px}
+.provider-tag.live{background:rgba(31,108,84,.22);border:1px solid rgba(88,214,176,.18);color:#72dfb9}
+.provider-tag.demo{background:rgba(142,105,48,.17);border:1px solid rgba(231,197,138,.2);color:#e5c68f}
+.section{margin-bottom:34px}
+.section-heading{align-items:center;margin-bottom:17px}
+.section-heading h2{font-size:15px;letter-spacing:-.35px;color:#e8eaf1}
+.index-card,.metric-card,.panel,.chart-panel{
+  background:linear-gradient(145deg,rgba(21,30,46,.96),rgba(13,20,33,.98));
+  border:1px solid var(--ds-border);border-radius:14px;
+  box-shadow:0 12px 32px rgba(0,0,0,.14);
+}
+.index-card{padding:19px 20px;transition:transform .18s,border-color .18s}
+.index-card:hover,.metric-card:hover{transform:translateY(-2px);border-color:rgba(231,197,138,.24)}
+.index-top{color:#a5afc0}
+.index-value{font-size:26px;letter-spacing:-.8px;color:#f0eee9}
+.sparkline{height:4px;background:rgba(255,255,255,.06)}
+.sparkline span{height:4px;background:linear-gradient(90deg,#9b8158,#5bd7b0)}
+.metric-card{padding:17px 18px}
+.metric-label{color:#9ca8bb}
+.metric-value{font-size:21px;color:#f1eee8}
+.metric-change{color:#8794a8}
+.help-bubble{border-color:rgba(231,197,138,.5);color:#e4c895;background:rgba(231,197,138,.08);transition:all .15s}
+.help-bubble:hover{background:rgba(231,197,138,.2);color:#fff}
+.table-wrap{border-radius:10px}
+th{background:rgba(255,255,255,.035);color:#9d9a91;letter-spacing:1px}
+td{border-color:rgba(172,188,216,.10);color:#c4ccda}
+td.symbol{color:#f0e8d9}
+.pill.buy{background:rgba(42,151,112,.17);color:#71dfb8}
+.pill.wait{background:rgba(191,146,65,.17);color:#e5c58b}
+.pill.avoid{background:rgba(187,77,91,.16);color:#f19aa4}
+.panel-foot{border-color:var(--ds-border)}
+.watch-head{background:rgba(255,255,255,.035);color:#9d9a91}
+.watch-row{border-color:rgba(172,188,216,.10)}
+.stock-icon{background:linear-gradient(135deg,rgba(231,197,138,.18),rgba(71,102,130,.24));color:#e7c58a;border:1px solid rgba(231,197,138,.13);border-radius:9px}
+.watchlist-manager input,.chart-toolbar select,.paper-order-form select,.paper-order-form input,.research-upload input,.research-upload select,.research-search input{
+  background:#0b1220;border-color:rgba(172,188,216,.2);border-radius:8px;color:#edf1fa
+}
+.watchlist-manager button,.research-search button{background:linear-gradient(135deg,#9f8051,#745d43);border-color:#b18d5b;color:#fff;border-radius:8px}
+.watchlist-suggestions{background:#111b2b;border-color:rgba(231,197,138,.22);border-radius:11px}
+.watchlist-suggestion:hover{background:#1b293b}
+.chart-panel{padding:16px;background:linear-gradient(145deg,#111a2a,#0c1421)}
+.chart-toolbar select{min-width:130px}
+.chart-periods button{border-radius:8px;border-color:rgba(172,188,216,.15);background:rgba(255,255,255,.035);color:#9ba8bb}
+.chart-periods button:hover,.chart-periods button.selected{background:rgba(231,197,138,.14);border-color:rgba(231,197,138,.48);color:#f0d7ad}
+.chart-subtitle{color:#b5a58c;border-color:rgba(172,188,216,.10);letter-spacing:1px}
+.chart-help{background:rgba(231,197,138,.055);border-color:rgba(231,197,138,.16);border-radius:9px}
+.chart-help summary{color:#dfc69e}
+.chart-help p{color:#a8b2c3}
+.chart-collapse-button{border-radius:8px;background:rgba(231,197,138,.08);border-color:rgba(231,197,138,.22);color:#e6c99c}
+.intelligence-panel{padding:21px}
+.intelligence-item{background:rgba(5,11,21,.38);border-color:rgba(172,188,216,.12);border-radius:10px}
+.intelligence-item strong,.intelligence-lists strong,.intelligence-caveats strong{color:#d6b783;letter-spacing:.2px}
+.intelligence-item p,.intelligence-lists ul,.intelligence-caveats ul{color:#b0bac9;line-height:1.75}
+.intelligence-summary{font-size:13px;color:#e1e5ed}
+.intelligence-stance,.intelligence-confidence{border:1px solid rgba(172,188,216,.13);border-radius:7px}
+.intelligence-button{background:linear-gradient(120deg,#a18458,#6d5a48);border:1px solid rgba(231,197,138,.35);color:#fff;border-radius:9px;padding:10px 15px}
+.intelligence-button:hover{filter:brightness(1.12);transform:translateY(-1px)}
+.intelligence-empty{background:rgba(18,27,42,.75);border-color:rgba(231,197,138,.18);border-radius:12px;color:#a6b1c2}
+.paper-order-form{border-radius:13px}
+.paper-submit{background:linear-gradient(110deg,#a48555,#786044);border:1px solid rgba(231,197,138,.3);border-radius:9px}
+.paper-submit:hover:not(:disabled){filter:brightness(1.12)}
+.paper-side-toggle button{border-radius:8px}
+.paper-table-panel{border-radius:13px}
+.demo-banner,.error-banner{border-radius:10px}
+footer{border-color:var(--ds-border);color:#748198;padding-top:19px}
+.sidebar-collapsed{width:76px;padding-left:10px;padding-right:10px}
+.sidebar-collapsed~.main-content{margin-left:76px}
+@media(max-width:900px){
+  .sidebar{width:70px;padding:20px 9px}
+  .sidebar .brand{padding:0 4px 30px}
+  .sidebar .brand>div:last-child,.sidebar .nav-label,.sidebar .nav-item span,.sidebar .sidebar-toggle span,.sidebar .secure span,.sidebar .user>div:last-child{display:none}
+  .sidebar .nav-item{justify-content:center;padding:0}
+  .sidebar .sidebar-toggle{justify-content:center;padding:9px 5px}
+  .main-content{margin-left:70px;padding:0 20px 28px}
+  .sidebar-collapsed{width:58px}
+  .sidebar-collapsed~.main-content{margin-left:58px}
+  .topbar{height:auto;min-height:72px;flex-wrap:wrap;padding:12px 0}
+  .global-stock-picker{order:0}
+}
+@media(max-width:600px){
+  .main-content{margin-left:58px;padding:0 12px 24px}
+  .top-actions{gap:7px;flex-wrap:wrap;justify-content:flex-end}
+  .global-stock-picker{padding:5px 7px 5px 9px;gap:5px}
+  .global-stock-picker>span{font-size:7px}
+  .global-stock-picker select{min-width:92px;font-size:10px}
+  .market-clock{display:none}
+  .page-heading{padding:26px 0 20px}
+  .section{margin-bottom:27px}
+  .index-card{padding:13px}
+  .index-value{font-size:20px}
+  .metric-card{padding:12px}
+  .metric-value{font-size:17px}
+  .chart-panel{padding:7px}
+  .intelligence-panel{padding:12px}
+  .chart-heading-actions{flex-wrap:wrap;justify-content:flex-end}
+}
