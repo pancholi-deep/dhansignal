@@ -5,7 +5,7 @@ import type { PaperAccount, PaperTrade, Quote, PaperControl } from '../types'
 const inr = (value: number) => `₹${value.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
 const stamp = (value: string | null) => value ? new Date(value).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : '—'
 
-export default function PaperTrading({ symbols, liveQuotes }: { symbols: string[]; liveQuotes: Quote[] }) {
+export default function PaperTrading({ symbols, liveQuotes, selectedSymbol, tradeIntent }: { symbols: string[]; liveQuotes: Quote[]; selectedSymbol: string; tradeIntent: { symbol: string; side: 'BUY' | 'SELL'; id: number } | null }) {
   const [account, setAccount] = useState<PaperAccount | null>(null)
   const [trades, setTrades] = useState<PaperTrade[]>([])
   const [quotes, setQuotes] = useState<Quote[]>([])
@@ -23,6 +23,8 @@ export default function PaperTrading({ symbols, liveQuotes }: { symbols: string[
   }
   useEffect(() => { void refresh().catch(e => setError(e.message)) }, [])
   useEffect(() => { setQuotes(liveQuotes) }, [liveQuotes])
+  useEffect(() => { if (symbols.includes(selectedSymbol)) setSymbol(selectedSymbol) }, [selectedSymbol, symbols.join(',')])
+  useEffect(() => { if (tradeIntent && symbols.includes(tradeIntent.symbol)) { setSymbol(tradeIntent.symbol); setSide(tradeIntent.side); setMessage('Order ticket prepared. Review quantity and price before placing the paper order.'); setError('') } }, [tradeIntent?.id])
   useEffect(() => { if (symbols.length && !symbols.includes(symbol)) setSymbol(symbols[0]) }, [symbols.join(',')])
   useEffect(() => { const id = window.setInterval(() => { void refresh().catch(e => setError(e.message)) }, 5000); return () => window.clearInterval(id) }, [])
 
