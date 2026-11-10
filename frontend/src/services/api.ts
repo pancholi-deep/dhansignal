@@ -1,19 +1,14 @@
 import type { Overview, Signal, WatchlistResponse, Candle, PaperAccount, PaperTrade, PaperOrderResult } from '../types'
 
 const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1'
-
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const response = await fetch(`${API}${path}`, {
-    ...options,
-    headers: { 'Content-Type': 'application/json', ...options.headers },
-  })
+  const response = await fetch(`${API}${path}`, { ...options, headers: { 'Content-Type': 'application/json', ...options.headers } })
   if (!response.ok) {
     const body = await response.json().catch(() => null)
     throw new Error(body?.detail || `API request failed (${response.status})`)
   }
   return response.json() as Promise<T>
 }
-
 export const api = {
   overview: () => request<Overview>('/market/overview'),
   watchlist: () => request<WatchlistResponse>('/market/watchlist'),
