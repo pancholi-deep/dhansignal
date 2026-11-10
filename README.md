@@ -61,6 +61,8 @@ docker compose down -v
 - `WS /api/v1/market/stream` — live Kite ticks for the starter NSE watchlist (demo snapshots when using the demo provider)
 - `GET /api/v1/signals?symbols=RELIANCE,HDFCBANK,INFY`
 - `GET /api/v1/paper/account`
+- `GET /api/v1/paper/control` and `PUT /api/v1/paper/control` — persistent simulator pause/resume switch
+- `WS /api/v1/market/stream` — streamed tick/snapshot feed
 
 ## Experimental technical signal engine
 
@@ -80,7 +82,7 @@ The API includes a `checks` breakdown and human-readable rationale. This scoring
 
 ## Paper trading simulator
 
-The paper simulator supports immediate simulated BUY and SELL fills at the configured provider's latest quote. In Zerodha mode, fresh WebSocket ticks are used when available, falling back to a broker quote snapshot when the stream has no tick newer than 30 seconds. It tracks cash, weighted-average position cost, open positions, realized and unrealized P&L, and a persistent trade journal. A simplified 0.10% fee is applied on each side; this is not a full brokerage, STT, exchange, GST or stamp-duty model. SELL orders cannot exceed the current position, and BUY orders cannot exceed available cash. The simulator never sends orders to a broker. The paper ledger is stored in PostgreSQL and is not reset when containers restart.
+The paper simulator supports immediate simulated BUY and SELL fills at the configured provider's latest quote. In Zerodha mode, fresh WebSocket ticks are used when available, falling back to a broker quote snapshot when the stream has no tick newer than 30 seconds. It tracks cash, weighted-average position cost, open positions, realized and unrealized P&L, and a persistent trade journal. A simplified 0.10% fee is applied on each side; this is not a full brokerage, STT, exchange, GST or stamp-duty model. SELL orders cannot exceed the current position, and BUY orders cannot exceed available cash. A persistent kill switch can pause new paper orders, and each order is capped at ₹25,000 by default. The simulator never sends orders to a broker. The paper ledger is stored in PostgreSQL and is not reset when containers restart.
 
 API endpoints:
 
