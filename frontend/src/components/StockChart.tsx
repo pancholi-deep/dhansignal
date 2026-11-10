@@ -50,6 +50,7 @@ export default function StockChart({ quotes, symbols: watchlistSymbols = [], sel
   const [provider, setProvider] = useState('')
   const [isLive, setIsLive] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [chartExpanded, setChartExpanded] = useState(true)
   const [error, setError] = useState('')
   const symbol = selectedSymbol
   const symbols = Array.from(new Set([...watchlistSymbols, ...quotes.map(item => item.symbol), selectedSymbol])).filter(Boolean)
@@ -163,8 +164,9 @@ export default function StockChart({ quotes, symbols: watchlistSymbols = [], sel
     <section className="section stock-chart-section" id="chart">
       <div className="section-heading">
         <div><h2>Technical analysis</h2><p>{symbol} · {window.interval === "day" ? "Daily candles" : window.interval === "5minute" ? "5-minute candles · 1 session" : "15-minute candles · 5 sessions"}</p></div>
-        <span className={`provider-tag ${isDemo ? 'demo' : 'live'}`}><span />{provider || 'LOADING'}</span>
+        <div className="chart-heading-actions"><span className={`provider-tag ${isDemo ? 'demo' : 'live'}`}><span />{provider || 'LOADING'}</span><button className="chart-collapse-button" onClick={() => setChartExpanded(v => !v)}>{chartExpanded ? "Collapse chart" : "Expand chart"}</button></div>
       </div>
+      {chartExpanded && <>
       <div className="chart-toolbar">
         <select value={symbol} onChange={e => onSymbolChange(e.target.value)} aria-label="Select stock">
           {symbols.map(item => <option key={item} value={item}>{item}</option>)}
@@ -182,17 +184,18 @@ export default function StockChart({ quotes, symbols: watchlistSymbols = [], sel
       {error && <p className="chart-error">{error}</p>}
       {!loading && !error && candles.length === 0 && <p className="chart-message">No historical candles available.</p>}
       {candles.length > 0 && (
-        <div className="chart-panel">
+        <div className="chart-panel"><details className="chart-help" open><summary>ⓘ How to read these charts</summary><p>Start with price and moving averages to identify trend. Use volume to judge participation, RSI to assess momentum extremes, and MACD to spot momentum shifts. No single indicator is a standalone buy/sell signal.</p></details>
           <details className="chart-indicators"><summary>Indicators shown · EMA 20 / 50 / 200, Volume, RSI 14, MACD</summary><div className="chart-legend"><span className="legend-ema20">EMA 20</span><span className="legend-ema50">EMA 50</span><span className="legend-ema200">EMA 200</span></div></details>
-          <div ref={priceRef} className="chart-canvas" />
-          <div className="chart-subtitle">VOLUME</div>
+          <div className="chart-subtitle">PRICE & TREND <span className="help-bubble" title="Candles show open, high, low and close. EMA 20 is short-term trend, EMA 50 medium-term, EMA 200 long-term. Price above rising averages is generally stronger; crossovers can lag.">i</span></div><div ref={priceRef} className="chart-canvas" />
+          <div className="chart-subtitle">VOLUME <span className="help-bubble" title="Volume measures shares traded. Rising price with rising volume can confirm demand; a price move on weak volume may be less convincing.">i</span></div>
           <div ref={volumeRef} className="chart-canvas" />
-          <div className="chart-subtitle">RELATIVE STRENGTH INDEX · 14</div>
+          <div className="chart-subtitle">RELATIVE STRENGTH INDEX · 14 <span className="help-bubble" title="RSI ranges from 0 to 100. Above 70 is commonly considered overbought and below 30 oversold, but strong trends can remain extreme. Look for divergence and trend context.">i</span></div>
           <div ref={rsiRef} className="chart-canvas" />
-          <div className="chart-subtitle">MACD · 12, 26, 9</div>
+          <div className="chart-subtitle">MACD · 12, 26, 9 <span className="help-bubble" title="MACD crossing above its signal line suggests improving momentum; below suggests weakening momentum. Histogram bars show the gap between MACD and signal. Signals can whipsaw in sideways markets.">i</span></div>
           <div ref={macdRef} className="chart-canvas" />
         </div>
       )}
+      </>}
     </section>
   )
 }
