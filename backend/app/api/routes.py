@@ -3,7 +3,7 @@ import re
 from pathlib import Path
 from datetime import timezone
 from pydantic import BaseModel, Field
-from fastapi import APIRouter, HTTPException, Query, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, Query, UploadFile, File, Form, WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
 from app.db.models import PaperAccount, PaperPosition, PaperTrade, ResearchChunk, ResearchDocument, WatchlistItem
@@ -11,6 +11,7 @@ from app.core.config import settings
 from app.market_data.factory import get_market_data_provider
 from app.market_data.demo import DEFAULT_SYMBOLS
 from app.services.market import get_signals
+from app.services.stream import market_stream
 from app.strategies.technical import add_indicators
 from app.services.research import MAX_PDF_BYTES, ResearchFileError, chunk_pdf, inspect_pdf, save_pdf, rank_chunks
 
@@ -397,3 +398,39 @@ def retrieve_research_evidence(
         return {"query": q, "results": ranked, "count": len(ranked), "retrieval": "lexical-v1"}
     finally:
         db.close()
+
+
+
+@router.websocket("/market/stream")
+async def market_stream_socket(websocket: WebSocket):
+    await websocket.accept()
+    if settings.market_data_provider.lower() != "zerodha":
+        try:
+            market = get_market_data_provider()
+            while True:
+                quotes = market.get_quotes(DEFAULT_SYMBOLS)
+                await websocket.send_json({
+                    "type": "snapshot", "provider": market.name, "is_live": False,
+                    "data": quotes,
+                })
+                import asyncio
+                await asyncio.sleep(3)
+        except WebSocketDisconnect:
+            return
+        except Exception:
+            return
+
+    queue = __import__("asyncio").Queue(maxsize=10)
+    market_stream.clients.add(queue)
+    try:
+        await websocket.send_json({
+            "type": "status", "provider": "ZERODHA KITE CONNECT",
+            "is_live": True, "data": market_stream.snapshot(),
+        })
+        while True:
+            message = await queue.get()
+            await websocket.send_json(message)
+    except WebSocketDisconnect:
+        pass
+    finally:
+        market_stream.clients.discard(queue)
