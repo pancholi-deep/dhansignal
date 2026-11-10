@@ -143,6 +143,7 @@ export default function StockChart({ quotes }: { quotes: Quote[] }) {
 
   useEffect(() => {
     if (!liveQuote || !candles.length || !candleSeriesRef.current || !volumeSeriesRef.current) return
+    if (liveQuote.timestamp && Date.now() - new Date(liveQuote.timestamp).getTime() > 60_000) return
     const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date())
     const previous = candles[candles.length - 1]
     const time = chartTime(today)
