@@ -102,3 +102,30 @@ html { scroll-behavior: smooth; scroll-padding-top: 18px; }
 .watchlist-suggestion em{font-size:8px;color:#8db7ff;font-style:normal}
 .watchlist-no-suggestions{padding:12px;color:#8294ad;font-size:9px}
 @media(max-width:600px){.watchlist-suggestions{width:min(280px,78vw)}}
+
+
+/* Gemini stock intelligence */
+.intelligence-button{background:#263f64;color:#d7e5fb;border:1px solid #365985;border-radius:7px;padding:9px 13px;font:600 10px 'DM Sans';cursor:pointer}
+.intelligence-button:disabled{opacity:.5;cursor:wait}
+.intelligence-empty,.intelligence-error{padding:15px 16px;border:1px dashed #34445c;border-radius:9px;color:#8b9bb2;background:#101827;font-size:10px;line-height:1.6}
+.intelligence-error{border-style:solid;border-color:#693c43;background:#29191e;color:#f1a5ac}
+.intelligence-panel{padding:17px}
+.intelligence-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.intelligence-symbol{font:700 16px Manrope,sans-serif;color:#edf3fc}
+.intelligence-meta{font-size:9px;color:#7f90a9;margin-left:10px}
+.intelligence-tags{display:flex;gap:7px;align-items:center}
+.intelligence-stance,.intelligence-confidence{font-size:8px;font-weight:700;letter-spacing:.6px;padding:6px 8px;border-radius:5px;background:#263449;color:#b9c9df}
+.intelligence-stance.bullish{background:#12382f;color:#48d5a2}
+.intelligence-stance.bearish{background:#3c2029;color:#ff8993}
+.intelligence-stance.neutral{background:#3a301a;color:#e9c16b}
+.intelligence-summary{font-size:12px;line-height:1.7;color:#d4deec;margin:15px 0}
+.intelligence-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.intelligence-item{padding:12px;background:#0c1421;border:1px solid #202d41;border-radius:7px}
+.intelligence-item strong,.intelligence-lists strong,.intelligence-caveats strong{font-size:10px;color:#9fc3ff}
+.intelligence-item p{font-size:10px;line-height:1.6;color:#aab8cb;margin-top:7px}
+.intelligence-lists{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.intelligence-lists ul,.intelligence-caveats ul{padding-left:17px;margin:8px 0 0;color:#aab8cb;font-size:10px;line-height:1.7}
+.intelligence-caveats{margin-top:13px;padding-top:12px;border-top:1px solid #202d41}
+.intelligence-disclaimer{margin-top:15px;padding-top:11px;border-top:1px solid #202d41;color:#71819a;font-size:9px;line-height:1.6}
+@media(max-width:900px){.intelligence-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.intelligence-lists{grid-template-columns:1fr}.intelligence-meta{display:block;margin:5px 0 0}.intelligence-item{padding:10px}}
