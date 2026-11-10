@@ -20,7 +20,33 @@ export default function Dashboard() {
   const [kiteAuth, setKiteAuth] = useState<KiteAuthStatus | null>(null)
   const [selectedSymbol, setSelectedSymbol] = useState('RELIANCE')
   const [tradeIntent, setTradeIntent] = useState<{ symbol: string; side: 'BUY' | 'SELL'; id: number } | null>(null)
+  const [watchlistInput, setWatchlistInput] = useState('')
+  const [watchlistBusy, setWatchlistBusy] = useState(false)
+  const [watchlistMessage, setWatchlistMessage] = useState('')
   const todayLabel = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }).toUpperCase()
+
+  async function manageWatchlist(action: 'add' | 'remove', symbol: string) {
+    setWatchlistBusy(true)
+    setWatchlistMessage('')
+    try {
+      if (action === 'add') await api.addWatchlistSymbol(symbol)
+      else await api.removeWatchlistSymbol(symbol)
+      const next = await api.watchlist()
+      setWatchlist(next)
+      if (action === 'add') {
+        setSelectedSymbol(symbol)
+        setWatchlistInput('')
+        setWatchlistMessage(symbol + ' added to watchlist')
+      } else {
+        if (selectedSymbol === symbol) setSelectedSymbol(next.symbols[0] || 'RELIANCE')
+        setWatchlistMessage(symbol + ' removed from watchlist')
+      }
+    } catch (e) {
+      setWatchlistMessage(e instanceof Error ? e.message : 'Could not update watchlist')
+    } finally {
+      setWatchlistBusy(false)
+    }
+  }
 
   async function refresh() {
     setLoading(true); setError('')
@@ -79,7 +105,10 @@ export default function Dashboard() {
       {/* Research document upload is parked while live trading is built. */}
       <div id="simulator"><PaperTrading symbols={watchlist?.symbols || ['RELIANCE', 'HDFCBANK', 'INFY', 'ICICIBANK', 'TCS', 'LT']} liveQuotes={watchlist?.quotes || []} selectedSymbol={selectedSymbol} tradeIntent={tradeIntent} /></div>
       <section className="section" id="signals"><div className="section-heading"><div><h2>AI-assisted trade signals</h2><p>Experimental strategy v0.2 · EMA, RSI, MACD, volume and ATR</p></div><span className="muted small">Strategy v0.2</span></div><div className="panel"><SignalTable signals={signals} onPrepareTrade={symbol => { setSelectedSymbol(symbol); setTradeIntent({ symbol, side: 'BUY', id: Date.now() }); document.getElementById('simulator')?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }} /><div className="panel-foot"><span>Signals are rule-based candidates, not personalized investment advice.</span><span>{signals.length} symbols scanned</span></div></div></section>
-      <section className="section" id="watchlist"><div className="section-heading"><div><h2>Watchlist</h2><p>Starter NSE universe · Expandable from the scanner</p></div><button className="text-button">Manage watchlist <span>→</span></button></div><div className="panel watch-panel"><div className="watch-head"><span>INSTRUMENT</span><span>LAST TRADED PRICE</span><span>DAY CHANGE</span><span>VOLUME</span></div>{(watchlist?.quotes || []).map(q => <div className="watch-row" key={q.symbol}><button type="button" className="watch-name watch-select" onClick={() => { setSelectedSymbol(q.symbol); document.getElementById("chart")?.scrollIntoView({ behavior: "smooth" }) }}><span className="stock-icon">{q.symbol.slice(0,1)}</span><span><strong>{q.symbol}</strong><small>NSE · EQ · View chart</small></span></button><strong>{inr(q.last_price)}</strong><span className={q.change_percent >= 0 ? 'trend-up' : 'trend-down'}>{q.change_percent >= 0 ? '+' : ''}{q.change_percent.toFixed(2)}%</span><span className="muted">{q.volume.toLocaleString('en-IN')}</span></div>)}</div></section>
+      <section className="section" id="watchlist"><div className="section-heading"><div><h2>Watchlist</h2><p>Starter NSE universe · Expandable from the scanner</p></div><form className="watchlist-manager" onSubmit={event => { event.preventDefault(); const value = watchlistInput.trim().toUpperCase(); if (value) void manageWatchlist('add', value) }}>
+        <input aria-label="NSE symbol to add" placeholder="Add NSE symbol" value={watchlistInput} onChange={event => setWatchlistInput(event.target.value.toUpperCase())} maxLength={32}/>
+        <button type="submit" disabled={watchlistBusy || !watchlistInput.trim()}>+ Add</button>
+      </form></div><div className="panel watch-panel">{watchlistMessage && <div className="watchlist-feedback" role="status">{watchlistMessage}</div>}<div className="watch-head"><span>INSTRUMENT</span><span>LAST TRADED PRICE</span><span>DAY CHANGE</span><span>VOLUME</span></div>{(watchlist?.quotes || []).map(q => <div className="watch-row" key={q.symbol}><button type="button" className="watch-name watch-select" onClick={() => { setSelectedSymbol(q.symbol); document.getElementById("chart")?.scrollIntoView({ behavior: "smooth" }) }}><span className="stock-icon">{q.symbol.slice(0,1)}</span><span><strong>{q.symbol}</strong><small>NSE · EQ · View chart</small></span></button><strong>{inr(q.last_price)}</strong><span className={q.change_percent >= 0 ? 'trend-up' : 'trend-down'}>{q.change_percent >= 0 ? '+' : ''}{q.change_percent.toFixed(2)}%</span><span className="muted">{q.volume.toLocaleString('en-IN')}</span><button type="button" className="watch-remove" aria-label={`Remove ${q.symbol} from watchlist`} title="Remove from watchlist" disabled={watchlistBusy || (watchlist?.symbols.length || 0) <= 1} onClick={() => void manageWatchlist('remove', q.symbol)}>×</button></div>)}</div></section>
       <footer><span>DhanSignal v0.1.0</span><span>Market data: {overview?.provider || 'Not connected'} · For research and simulation only</span></footer>
     </main>
   </div>
