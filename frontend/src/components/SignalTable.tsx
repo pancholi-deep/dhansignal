@@ -13,13 +13,13 @@ export function SignalTable({ signals, onPrepareTrade }: { signals: Signal[]; on
         <thead>
           <tr>
             <th>Stock</th>
-            <th>Signal</th>
-            <th>Score</th>
+            <th title="Rule-based action: BUY, WAIT or AVOID. It is a strategy output, not a guarantee.">Signal <span className="help-bubble">i</span></th>
+            <th title="Strategy score out of 10 from the configured technical rules. Higher is stronger within this strategy only.">Score <span className="help-bubble">i</span></th>
             <th>Price</th>
-            <th>Entry</th>
-            <th>Stop-loss</th>
-            <th>Target</th>
-            <th>RSI</th>
+            <th title="Indicative strategy entry level; check current liquidity and price before acting.">Entry <span className="help-bubble">i</span></th>
+            <th title="Indicative risk-control level. Actual execution can differ due to gaps and slippage.">Stop-loss <span className="help-bubble">i</span></th>
+            <th title="Indicative strategy target, not a forecast or assured return.">Target <span className="help-bubble">i</span></th>
+            <th title="Relative Strength Index over 14 periods; above 70 is often considered overbought and below 30 oversold.">RSI <span className="help-bubble">i</span></th>
             <th>Why?</th>
           </tr>
         </thead>
