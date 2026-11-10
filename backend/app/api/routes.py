@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 from fastapi import APIRouter, HTTPException, Query, UploadFile, File, Form, WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
-from app.db.models import PaperAccount, PaperPosition, PaperTrade, ResearchChunk, ResearchDocument, WatchlistItem
+from app.db.models import PaperAccount, PaperPosition, PaperTrade, PaperTradingControl, ResearchChunk, ResearchDocument, WatchlistItem
 from app.core.config import settings
 from app.market_data.factory import get_market_data_provider
 from app.market_data.demo import DEFAULT_SYMBOLS
@@ -17,6 +17,10 @@ from app.services.research import MAX_PDF_BYTES, ResearchFileError, chunk_pdf, i
 
 router = APIRouter()
 PAPER_FEE_RATE = 0.001  # 0.10% simulated fee per side
+
+
+class PaperControlRequest(BaseModel):
+    enabled: bool
 
 
 class PaperOrderRequest(BaseModel):
@@ -136,6 +140,15 @@ def place_paper_order(order: PaperOrderRequest):
             raise HTTPException(status_code=404, detail=f"No usable quote found for {symbol}")
         price = float(quote["last_price"])
         notional = price * order.quantity
+        control = db.query(PaperTradingControl).filter_by(id=1).first()
+        if control is None:
+            control = PaperTradingControl(id=1, enabled=True, max_order_value=25000.0)
+            db.add(control)
+            db.flush()
+        if not control.enabled:
+            raise HTTPException(status_code=423, detail="Paper trading is paused. Enable the simulator to place orders.")
+        if notional > control.max_order_value:
+            raise HTTPException(status_code=400, detail=f"Order value exceeds the ₹{control.max_order_value:,.0f} per-order limit")
         fees = round(notional * PAPER_FEE_RATE, 2)
         position = db.query(PaperPosition).filter_by(account_id=account.id, symbol=symbol).with_for_update().first()
 
@@ -434,3 +447,35 @@ async def market_stream_socket(websocket: WebSocket):
         pass
     finally:
         market_stream.clients.discard(queue)
+
+
+
+@router.get("/paper/control")
+def get_paper_control():
+    db: Session = SessionLocal()
+    try:
+        control = db.query(PaperTradingControl).filter_by(id=1).first()
+        if control is None:
+            control = PaperTradingControl(id=1, enabled=True, max_order_value=25000.0)
+            db.add(control)
+            db.commit()
+            db.refresh(control)
+        return {"enabled": control.enabled, "max_order_value": control.max_order_value}
+    finally:
+        db.close()
+
+
+@router.put("/paper/control")
+def update_paper_control(payload: PaperControlRequest):
+    db: Session = SessionLocal()
+    try:
+        control = db.query(PaperTradingControl).filter_by(id=1).first()
+        if control is None:
+            control = PaperTradingControl(id=1, enabled=payload.enabled, max_order_value=25000.0)
+            db.add(control)
+        else:
+            control.enabled = payload.enabled
+        db.commit()
+        return {"enabled": control.enabled, "max_order_value": control.max_order_value}
+    finally:
+        db.close()
