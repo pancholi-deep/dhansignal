@@ -22,5 +22,3 @@ export type PaperTrade = {
   price: number; fees: number; realized_pnl: number; created_at: string | null
 }
 export type PaperOrderResult = { message: string; trade: PaperTrade; account: PaperAccount }
-
-export type PaperOrderResult = { message: string; trade: PaperTrade; account: PaperAccount }
