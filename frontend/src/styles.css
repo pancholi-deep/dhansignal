@@ -76,3 +76,6 @@ html { scroll-behavior: smooth; scroll-padding-top: 18px; }
 .chart-indicators .chart-legend { padding: 10px 0 2px; }
 .chart-periods button { min-width: 42px; }
 @media(max-width:900px){ .nav-item { font-size: 0 !important; } }
+
+.signal-actions { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
+.signal-actions .text-button { padding: 3px 0; }
