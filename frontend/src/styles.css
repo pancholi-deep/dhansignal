@@ -55,3 +55,7 @@
 .research-doc-meta{font-size:9px;color:#78879d;margin-top:6px}
 .research-snippet{font-size:10px;line-height:1.6;color:#aab8cb;margin-top:8px}
 @media(max-width:900px){.research-layout{grid-template-columns:1fr}}
+
+.research-evidence-list { display: grid; gap: 10px; margin: 12px 0 16px; }
+.research-evidence { padding: 14px; border: 1px solid var(--border, #273449); border-radius: 12px; background: rgba(255,255,255,.025); }
+.research-evidence p { margin: 10px 0 0; color: var(--text-secondary, #aab5c5); font-size: 13px; line-height: 1.6; white-space: pre-wrap; }
