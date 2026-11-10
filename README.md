@@ -97,9 +97,11 @@ Research API endpoints:
 - `POST /api/v1/research/documents` — multipart PDF upload with `file`, `document_type`, `company_name`, optional `title`, `symbol`, and `reporting_period`.
 - `GET /api/v1/research/documents` — list documents, optionally filter by `document_type` or `symbol`.
 - `GET /api/v1/research/documents/{id}` — retrieve metadata and extracted text.
-- `GET /api/v1/research/search?q=...` — keyword search over extracted text, with snippets.
+- `GET /api/v1/research/search?q=...` — document-level keyword search with snippets.
+- `GET /api/v1/research/retrieve?q=...` — ranked evidence passages with document metadata and 1-based PDF page citations.
+- `POST /api/v1/research/documents/{id}/index` — build the page-aware index for a document uploaded before this milestone.
 
-Current ingestion limits: PDF only, maximum 20 MB, text-based PDFs only. Scanned/image-only PDFs need OCR and are not processed in this milestone. Search is PostgreSQL keyword matching, not semantic/vector retrieval. No LLM-generated analysis is produced yet. The current app has no user authentication or per-user document isolation; run it only in a trusted local environment until access controls are implemented.
+Current ingestion limits: PDF only, maximum 20 MB, text-based PDFs only. Scanned/image-only PDFs need OCR and are not processed in this milestone. Each uploaded PDF is split into overlapping text passages while preserving 1-based PDF page numbers. The first evidence retriever is a dependency-free lexical ranker; it is not semantic/vector retrieval and does not understand paraphrases. Previously uploaded PDFs can be indexed with the document index endpoint. No LLM-generated analysis is produced yet. The current app has no user authentication or per-user document isolation; run it only in a trusted local environment until access controls are implemented.
 
 ## Project layout
 
@@ -125,5 +127,5 @@ DhanSignal/
 - Kite login callback/token generation and WebSocket streaming are not implemented yet; the current adapter uses the configured access token for its supported REST endpoints.
 - Market-data access and entitlements depend on the broker account, current plan and applicable terms.
 - Demo mode is synthetic, is not connected to NSE/BSE, and must not be interpreted as a live quote.
-- Semantic/vector retrieval, OCR for scanned PDFs, AI-generated source-grounded research reports, portfolio import, realistic paper-order execution, complete transaction charges and the mobile app are subsequent milestones.
+- Semantic/vector retrieval and embeddings, OCR for scanned PDFs, AI-generated source-grounded research reports, portfolio import, realistic paper-order execution, complete transaction charges and the mobile app are subsequent milestones.
 - Before broker order execution, review current SEBI, exchange and broker requirements; add explicit approval, risk limits, audit logs and kill switches.
