@@ -139,6 +139,8 @@ Conviction score must be an integer from 0 to 10. Do not default to HOLD merely 
                 seen_urls.add(uri)
                 sources.append({"title": web_source.get("title") or uri, "url": uri})
         search_queries = grounding.get("webSearchQueries") or []
+        if not sources or not search_queries:
+            raise RuntimeError("Gemini returned no verifiable Google Search grounding for this analysis. Please retry.")
     except (ValueError, KeyError, IndexError, TypeError) as exc:
         raise RuntimeError("Gemini returned an invalid analysis response") from exc
 
