@@ -105,7 +105,10 @@ def history(symbol: str, interval: str = "day", days: int = Query(365, ge=30, le
     if frame.empty:
         raise HTTPException(status_code=404, detail="No historical data found")
     frame = add_indicators(frame)
-    frame["date"] = frame["date"].map(lambda value: value.strftime("%Y-%m-%d") if hasattr(value, "strftime") else str(value)[:10])
+    if interval == "day":
+        frame["date"] = frame["date"].map(lambda value: value.strftime("%Y-%m-%d") if hasattr(value, "strftime") else str(value)[:10])
+    else:
+        frame["date"] = frame["date"].map(lambda value: value.isoformat() if hasattr(value, "isoformat") else str(value))
     candles = json.loads(frame.to_json(orient="records"))
     return {"symbol": symbol.upper(), "provider": market.name, "is_live": market.is_live, "candles": candles}
 
