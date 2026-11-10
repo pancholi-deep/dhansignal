@@ -58,3 +58,22 @@ class SignalRecord(Base):
     target_price: Mapped[float | None] = mapped_column(Float, nullable=True)
     as_of: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
     strategy_version: Mapped[str] = mapped_column(String(32), default="baseline-0.1")
+
+
+class ResearchDocument(Base):
+    __tablename__ = "research_documents"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    title: Mapped[str] = mapped_column(String(240))
+    original_filename: Mapped[str] = mapped_column(String(255))
+    document_type: Mapped[str] = mapped_column(String(40), index=True)
+    company_name: Mapped[str] = mapped_column(String(160), index=True)
+    symbol: Mapped[str | None] = mapped_column(String(32), nullable=True, index=True)
+    reporting_period: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    storage_path: Mapped[str] = mapped_column(String(500))
+    mime_type: Mapped[str] = mapped_column(String(100), default="application/pdf")
+    file_size: Mapped[int] = mapped_column(Integer)
+    sha256: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    page_count: Mapped[int] = mapped_column(Integer, default=0)
+    extracted_text: Mapped[str] = mapped_column(String, default="")
+    status: Mapped[str] = mapped_column(String(24), default="processed")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)
