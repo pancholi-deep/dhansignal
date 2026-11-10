@@ -1,4 +1,5 @@
 import json
+import logging
 import time
 from datetime import datetime, timezone
 from threading import Lock
@@ -7,13 +8,14 @@ import requests
 
 from app.core.config import settings
 from app.market_data.factory import get_market_data_provider
-from app.services.market import get_signals
+from app.strategies.technical import generate_signal
 from app.strategies.technical import add_indicators
 
 
 _CACHE: dict[str, tuple[float, dict]] = {}
 _CACHE_LOCK = Lock()
 _CACHE_TTL_SECONDS = 300
+logger = logging.getLogger(__name__)
 
 
 def generate_stock_intelligence(symbol: str) -> dict:
@@ -27,6 +29,7 @@ def generate_stock_intelligence(symbol: str) -> dict:
         if cached and now - cached[0] < _CACHE_TTL_SECONDS:
             return {**cached[1], "cached": True}
 
+    started = time.monotonic()
     market = get_market_data_provider()
     quote = next((row for row in market.get_quotes([symbol]) if row.get("symbol") == symbol), None)
     if not quote or not quote.get("last_price"):
@@ -45,7 +48,8 @@ def generate_stock_intelligence(symbol: str) -> dict:
         except (TypeError, ValueError):
             return None
 
-    signal = next((row for row in get_signals([symbol]) if row.get("symbol") == symbol), {})
+    signal = generate_signal(symbol, history)
+    logger.info("Prepared Gemini context for %s in %.2fs", symbol, time.monotonic() - started)
     columns = [field for field in ["date", "open", "high", "low", "close", "volume"] if field in enriched.columns]
     context = {
         "symbol": symbol,
@@ -82,10 +86,11 @@ Keep each field concise. If data is incomplete or stale, say so and lower confid
         headers={"x-goog-api-key": settings.gemini_api_key},
         json={
             "contents": [{"parts": [{"text": prompt + "\n\nMARKET CONTEXT JSON:\n" + json.dumps(context, default=str)}]}],
-            "generationConfig": {"temperature": 0.2, "responseMimeType": "application/json"},
+            "generationConfig": {"responseMimeType": "application/json", "maxOutputTokens": 1200, "thinkingConfig": {"thinkingLevel": "LOW"}},
         },
-        timeout=35,
+        timeout=(10, 90),
     )
+    logger.info("Gemini request for %s using %s completed with HTTP %s in %.2fs", symbol, settings.gemini_model, response.status_code, time.monotonic() - started)
     if response.status_code >= 400:
         try:
             message = response.json().get("error", {}).get("message", "Gemini API request failed")
