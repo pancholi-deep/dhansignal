@@ -1,4 +1,4 @@
-import type { Overview, Signal, WatchlistResponse, Candle, PaperAccount, PaperTrade, PaperOrderResult, ResearchDocument, ResearchEvidence } from '../types'
+import type { Overview, Signal, WatchlistResponse, Candle, PaperAccount, PaperTrade, PaperOrderResult, ResearchDocument, ResearchEvidence, PaperControl } from '../types'
 
 const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1'
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -14,6 +14,8 @@ export const api = {
   watchlist: () => request<WatchlistResponse>('/market/watchlist'),
   signals: () => request<{ signals: Signal[]; provider: string }>('/signals'),
   account: () => request<PaperAccount>('/paper/account'),
+  paperControl: () => request<PaperControl>('/paper/control'),
+  updatePaperControl: (enabled: boolean) => request<PaperControl>('/paper/control', { method: 'PUT', body: JSON.stringify({ enabled }) }),
   trades: () => request<{ trades: PaperTrade[] }>('/paper/trades'),
   placePaperOrder: (payload: { symbol: string; side: 'BUY' | 'SELL'; quantity: number }) =>
     request<PaperOrderResult>('/paper/orders', { method: 'POST', body: JSON.stringify(payload) }),
