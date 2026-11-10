@@ -4,17 +4,21 @@ export type Signal = { symbol: string; action: 'BUY' | 'WAIT' | 'AVOID'; score: 
 export type Overview = { provider: string; is_live: boolean; indices: IndexQuote[] }
 export type WatchlistResponse = { symbols: string[]; quotes: Quote[]; provider: string; is_live: boolean }
 export type Candle = {
-  date: string
-  open: number
-  high: number
-  low: number
-  close: number
-  volume: number
-  ema_20: number | null
-  ema_50: number | null
-  ema_200: number | null
-  rsi_14: number | null
-  macd: number | null
-  macd_signal: number | null
-  macd_histogram: number | null
+  date: string; open: number; high: number; low: number; close: number; volume: number
+  ema_20: number | null; ema_50: number | null; ema_200: number | null
+  rsi_14: number | null; macd: number | null; macd_signal: number | null; macd_histogram: number | null
 }
+export type PaperPosition = {
+  symbol: string; quantity: number; average_price: number; last_price: number
+  market_value: number; unrealized_pnl: number; realized_pnl: number
+}
+export type PaperAccount = {
+  id: number; currency: string; starting_cash: number; cash_balance: number
+  invested_value: number; total_value: number; realized_pnl: number
+  unrealized_pnl: number; positions: PaperPosition[]; mode: 'PAPER'; provider: string
+}
+export type PaperTrade = {
+  id: number; symbol: string; side: 'BUY' | 'SELL'; quantity: number
+  price: number; fees: number; realized_pnl: number; created_at: string | null
+}
+export type PaperOrderResult = { message: string; trade: PaperTrade; account: PaperAccount }
